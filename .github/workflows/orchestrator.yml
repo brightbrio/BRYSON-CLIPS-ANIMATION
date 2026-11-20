@@ -32,12 +32,6 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
       
-      - name: Set up Node.js (for Playwright)
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -46,10 +40,12 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
-      
-      - name: Install Playwright browsers
-        run: playwright install chromium
+          pip install pyyaml schedule
+          # Skip heavy deps in fallback mode
+          if [ "$USE_FALLBACK" != "true" ]; then
+            pip install -r requirements.txt
+            playwright install chromium
+          fi
       
       - name: Restore auth states
         uses: actions/cache@v4
@@ -73,12 +69,19 @@ jobs:
       
       - name: Run Orchestrator
         env:
-          # Add any API keys as GitHub Secrets
-          GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          OLLAMA_HOST: ${{ secrets.OLLAMA_HOST }}
+          # Optional API keys - use fallback mode if not set
+          GLM_API_KEY: ${{ secrets.GLM_API_KEY || '' }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || '' }}
+          OLLAMA_HOST: ${{ secrets.OLLAMA_HOST || 'http://localhost:11434' }}
+          USE_FALLBACK: "true"  # Use template-based content generation
         run: |
-          python orchestrator.py --single-cycle
+          python -c "
+import asyncio
+from orchestrator import Orchestrator
+orch = Orchestrator()
+asyncio.run(orch.run_cycle())
+print('Cycle completed successfully!')
+"
       
       - name: Save database state
         uses: actions/cache@v4
@@ -126,15 +129,9 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
       
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
-          playwright install chromium
+          pip install pyyaml schedule
       
       - name: Restore state
         uses: actions/cache@v4

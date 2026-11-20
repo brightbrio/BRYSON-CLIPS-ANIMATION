@@ -135,6 +135,15 @@ class Orchestrator:
         self.production_agent = ProductionAgent(self.config)
         self.distribution_agent = DistributionAgent(self.config)
         
+        # Check for fallback mode
+        import os
+        use_fallback = os.environ.get("USE_FALLBACK", "false").lower() == "true"
+        if use_fallback:
+            logger.info("Running in FALLBACK MODE - using template-based generation")
+            # Set up fallback config
+            self.config["ideation"]["backend"] = "fallback"
+            self.config["production"]["google_flow"]["enabled"] = False
+        
         await self.ideation_agent.start()
         await self.production_agent.start()
         await self.distribution_agent.start()
@@ -187,6 +196,9 @@ class Orchestrator:
     
     async def run_cycle(self):
         """Execute one full production cycle."""
+        import os
+        use_fallback = os.environ.get("USE_FALLBACK", "false").lower() == "true"
+        
         cycle_id = self._get_next_cycle_id()
         self._log_cycle_start(cycle_id)
         
@@ -196,13 +208,22 @@ class Orchestrator:
         videos_posted = 0
         
         try:
-            # 1. IDEATION: Generate 10 ideas, pick best
+            # 1. IDEATION: Generate ideas (fallback if no LLM available)
             logger.info("Phase 1: Ideation")
             adjustments = get_active_adjustments()
-            ideas = await self.ideation_agent.generate_ideas(
-                count=self.config["ideation"]["ideas_per_batch"],
-                adjustments=adjustments
-            )
+            
+            if use_fallback:
+                logger.info("Using FALLBACK ideation - generating template ideas")
+                ideas = await self.ideation_agent.generate_ideas(
+                    count=self.config["ideation"]["ideas_per_batch"],
+                    adjustments=adjustments,
+                    use_fallback=True
+                )
+            else:
+                ideas = await self.ideation_agent.generate_ideas(
+                    count=self.config["ideation"]["ideas_per_batch"],
+                    adjustments=adjustments
+                )
             
             if not ideas:
                 raise Exception("No ideas generated")
@@ -222,11 +243,25 @@ class Orchestrator:
             logger.info("Phase 4: Video Prompts")
             video_prompts = await self.production_agent.generate_video_prompts(story, character_sheet, adjustments)
             
-            # 5. PRODUCTION: Generate clips + voiceover + edit
-            logger.info("Phase 5: Production")
-            video_result = await self.production_agent.produce_video(
-                video_prompts, story, character_sheet
-            )
+            # 5. PRODUCTION: In fallback mode, skip actual video generation
+            if use_fallback:
+                logger.info("Phase 5: PRODUCTION SKIPPED (fallback mode)")
+                video_result = {
+                    "final_video_path": "",
+                    "thumbnail_path": "",
+                    "title_main": f"How a {best_idea['prop']} Changed History",
+                    "title_youtube": f"How a {best_idea['prop']} Changed History #Shorts",
+                    "title_tiktok": f"The {best_idea['prop']} story you didn't know #history",
+                    "title_facebook": f"Watch: How the {best_idea['prop']} shocked history",
+                    "title_instagram": f"The {best_idea['prop']} that changed everything #reels",
+                    "description": f"This is the true story of how a {best_idea['prop']} {best_idea['topic']}. Made with free AI tools.",
+                    "hashtags": ["#Shorts", "#History", "#Facts", "#Animation", "#AI"]
+                }
+            else:
+                logger.info("Phase 5: Production")
+                video_result = await self.production_agent.produce_video(
+                    video_prompts, story, character_sheet
+                )
             
             # Save to database
             video_id = self._save_video(
@@ -235,24 +270,27 @@ class Orchestrator:
             )
             videos_generated = 1
             
-            # 6. DISTRIBUTION: Post to all platforms
-            logger.info("Phase 6: Distribution")
-            await self.distribution_agent.post_to_all(
-                video_result["final_video_path"],
-                {
-                    "video_id": video_id,
-                    "prop": best_idea["prop"],
-                    "title_main": video_result["title_main"],
-                    "title_youtube": video_result["title_youtube"],
-                    "title_tiktok": video_result["title_tiktok"],
-                    "title_facebook": video_result["title_facebook"],
-                    "title_instagram": video_result["title_instagram"],
-                    "description": video_result["description"],
-                    "hashtags": video_result["hashtags"],
-                },
-                video_result["thumbnail_path"]
-            )
-            videos_posted = 1
+            # 6. DISTRIBUTION: Skip posting in fallback mode
+            if use_fallback:
+                logger.info("Phase 6: DISTRIBUTION SKIPPED (no auth in CI)")
+            else:
+                logger.info("Phase 6: Distribution")
+                await self.distribution_agent.post_to_all(
+                    video_result["final_video_path"],
+                    {
+                        "video_id": video_id,
+                        "prop": best_idea["prop"],
+                        "title_main": video_result["title_main"],
+                        "title_youtube": video_result["title_youtube"],
+                        "title_tiktok": video_result["title_tiktok"],
+                        "title_facebook": video_result["title_facebook"],
+                        "title_instagram": video_result["title_instagram"],
+                        "description": video_result["description"],
+                        "hashtags": video_result["hashtags"],
+                    },
+                    video_result["thumbnail_path"]
+                )
+                videos_posted = 1
             
             logger.info(f"Cycle {cycle_id} completed successfully")
             

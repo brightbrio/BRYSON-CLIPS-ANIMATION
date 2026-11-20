@@ -29,6 +29,18 @@ ideation:
   fact_check_enabled: true
   story_structure: "hook_escalate_prop_obstacle_payoff_twist"
   narration_wps: 3.8  # words per second
+  backend: "ollama"  # Use local Ollama or fallback to template
+  ollama:
+    host: "http://localhost:11434"
+    model: "llama3.2:latest"  # Lightweight model for free tier
+    temperature: 0.8
+
+# Ollama configuration for local LLM
+ollama:
+  enabled: true
+  host: "http://host.docker.internal:11434"
+  model: "llama3.2:3b"
+  temperature: 0.8
 
 production:
   # Google Flow (Veo 3) - free tier

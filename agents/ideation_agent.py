@@ -103,6 +103,17 @@ Output ONLY numbered list 1-10.
         ]
         return "\n".join(fallback)
     
+    async def generate_ideas(self, count: int = 10, adjustments: Optional[Dict] = None, use_fallback: bool = False) -> List[Dict]:
+        """Generate ideas (async wrapper for backward compatibility)."""
+        if use_fallback or self.backend == "fallback":
+            logger.info("Using fallback idea generation")
+            response = self._fallback_ideas()
+        else:
+            prompt = self._build_phase1_prompt()
+            response = self._call_llm(prompt)
+        
+        return self._parse_ideas(response)[:count]
+    
     def generate_ideas_batch(self) -> List[Dict]:
         """Generate 10 new ideas, fact-check, store in DB."""
         logger.info("Generating new idea batch...")
