@@ -1,0 +1,194 @@
+# BRYSON CLIPS ANIMATION CONFIG
+# All free-tier settings - $0/month forever
+
+database:
+  path: "state/rickclips.db"
+
+paths:
+  state_dir: "state"
+  auth_dir: "auth"
+  assets_dir: "assets"
+  output_dir: "output"
+  prompts_dir: "prompts"
+
+orchestrator:
+  cycles_per_day: 4
+  cycle_times:
+    - "06:00"  # Morning batch
+    - "12:00"  # Midday batch
+    - "18:00"  # Evening batch
+    - "00:00"  # Night batch
+  max_retries: 3
+  retry_delay_minutes: 15
+
+ideation:
+  model: "glm-4-flash"  # Free via Z.ai / GLM
+  ideas_per_batch: 10
+  min_novelty_score: 7
+  max_historical_age_years: 5000
+  fact_check_enabled: true
+  story_structure: "hook_escalate_prop_obstacle_payoff_twist"
+  narration_wps: 3.8  # words per second
+
+production:
+  # Google Flow (Veo 3) - free tier
+  google_flow:
+    enabled: true
+    model: "veo-3"
+    resolution: "720p"  # Free tier max
+    duration_seconds: 10
+    clips_per_video: 10
+    style_prompt: >
+      Stickman animation, white circular marker-drawn heads, thick black outlines (3px),
+      deep blue-purple shadows #2D1B4E, flat 2D limbs, 2.5D parallax depth,
+      cinematic gliding camera, slow dolly 2-5 seconds per shot, 
+      soft volumetric lighting, clean minimal background
+    negative_prompt: >
+      realistic, photo, 3d render, cgi, gradient, blur, watermark, text,
+      colorful, complex background, detailed faces, fingers, toes
+    aspect_ratio: "9:16"
+    fps: 30
+  
+  # Google AI Studio (TTS) - free tier
+  google_ai_studio:
+    enabled: true
+    model: "gemini-2.5-flash-preview-tts"
+    voice: "en-US-Journey-O"  # Narrator style
+    speed: 1.0
+    pitch: 0
+  
+  # CapCut Web - free
+  capcut:
+    enabled: true
+    template: "ricks_clips_60s"
+    music_volume: 0.15
+    sfx_volume: 0.4
+    voiceover_volume: 1.0
+    caption_style:
+      font: "Anton"
+      size: 72
+      color: "#FFFFFF"
+      stroke: "#000000"
+      stroke_width: 3
+      position: "bottom_center"
+      animation: "pop_in"
+    transitions:
+      type: "cut"  # Hard cuts only
+      duration_frames: 0
+  
+  # Character consistency
+  character:
+    head_shape: "circle"
+    head_color: "#FFFFFF"
+    head_stroke: "#000000"
+    head_stroke_width: 3
+    body_color: "#000000"
+    body_stroke_width: 4
+    limb_style: "flat_2d"
+    shadow_color: "#2D1B4E"
+    shadow_opacity: 0.6
+    prop_highlight: true
+  
+  video:
+    target_duration: 60  # seconds
+    shots: 10
+    shot_duration: 6  # seconds each
+    frames_per_shot: 180  # 6s * 30fps
+    hook_frame: 90  # 3s hook
+    mid_point_frame: 900  # 30s midpoint
+    payoff_frame: 1620  # 54s payoff
+    twist_frame: 1740  # 58s twist question
+
+distribution:
+  platforms:
+    youtube:
+      enabled: true
+      upload_via: "studio.youtube.com"
+      max_daily: 4
+      hashtags: ["#Shorts", "#History", "#Facts", "#Animation"]
+    tiktok:
+      enabled: true
+      upload_via: "tiktok.com/upload"
+      max_daily: 4
+      hashtags: ["#history", "#facts", "#animation", "#learnontiktok"]
+    facebook:
+      enabled: true
+      upload_via: "business.facebook.com"
+      max_daily: 4
+      hashtags: ["#HistoryFacts", "#Animation", "#Shorts"]
+    instagram:
+      enabled: true
+      upload_via: "instagram.com/reels/upload"
+      max_daily: 4
+      hashtags: ["#history", "#facts", "#animation", "#reels"]
+  
+  # Scheduling
+  post_delay_minutes: 5  # Stagger posts
+  max_replies_per_platform: 10
+  engagement_window_minutes: 60
+  
+  # Cross-post timing (local time)
+  schedule:
+    youtube: ["06:15", "12:15", "18:15", "00:15"]
+    tiktok: ["06:20", "12:20", "18:20", "00:20"]
+    facebook: ["06:25", "12:25", "18:25", "00:25"]
+    instagram: ["06:30", "12:30", "18:30", "00:30"]
+
+evolution:
+  enabled: true
+  analysis_window_days: 7
+  thresholds:
+    hook_3s: 0.70
+    retention_50: 0.40
+    completion: 0.30
+    ctr: 0.05
+    min_daily_revenue: 50
+  
+  adjustment_strength: "moderate"  # conservative, moderate, aggressive
+  max_adjustments_per_cycle: 3
+  persist_adjustments_days: 14
+
+# Free tier limits
+free_tier_limits:
+  google_flow:
+    daily_generations: 20
+    monthly_generations: 600
+    max_resolution: "720p"
+    max_duration: 10
+  
+  google_ai_studio:
+    daily_requests: 1500
+    rpm: 60
+    tts_chars_per_request: 5000
+  
+  capcut_web:
+    daily_exports: 50
+    max_duration: 15 * 60  # 15 minutes
+  
+  youtube_api:
+    daily_quota: 10000
+  
+  playwright:
+    max_concurrent: 2
+    timeout_seconds: 120
+
+# Logging
+logging:
+  level: "INFO"
+  file: "logs/orchestrator.log"
+  max_size_mb: 10
+  backup_count: 7
+
+# Deployment
+deployment:
+  mode: "github_actions"  # or "oracle_cloud"
+  github_actions:
+    schedule_cron: "0 6,12,18,0 * * *"  # 4x daily
+    runner: "ubuntu-latest"
+    timeout_minutes: 45
+  
+  oracle_cloud:
+    instance_shape: "VM.Standard.A1.Flex"  # ARM free tier
+    ocpus: 4
+    memory_gb: 24
+    always_free: true

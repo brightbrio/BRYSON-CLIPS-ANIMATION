@@ -1,0 +1,47 @@
+# RICKS CLIPS AUTOMATION - Requirements
+# All packages available on PyPI, compatible with Python 3.10+
+
+# Core
+pyyaml>=6.0
+schedule>=1.2
+sqlite-utils>=3.37  # For easier DB ops (optional)
+
+# Async & HTTP
+aiohttp>=3.9
+httpx>=0.26
+asyncio-throttle>=1.0
+
+# Playwright for browser automation
+playwright>=1.40
+
+# LLM clients (free tiers)
+ollama>=0.3  # For local LLM (ideation agent)
+zhipuai>=2.0  # For GLM 4 Flash (free)
+google-generativeai>=0.7  # For Gemini/Google AI Studio
+
+# Media processing
+opencv-python-headless>=4.9
+pillow>=10.0
+moviepy>=1.0
+ffmpeg-python>=0.2  # Requires system ffmpeg
+
+# Audio
+pydub>=0.25
+edge-tts>=6.1  # Backup TTS (free)
+
+# Data & Analysis
+pandas>=2.1
+numpy>=1.24
+
+# Utilities
+python-dotenv>=1.0
+tqdm>=4.66
+loguru>=0.7
+rich>=13.7
+
+# Testing
+pytest>=7.4
+pytest-asyncio>=0.21
+
+# Type hints
+typing-extensions>=4.8
