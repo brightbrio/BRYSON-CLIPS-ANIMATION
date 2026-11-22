@@ -43,6 +43,21 @@ ollama:
   temperature: 0.8
 
 production:
+  # Style DNA - core visual identity
+  style_dna:
+    character_style: "2D marker stickman"
+    head_shape: "white circle"
+    head_stroke: "#000000 thick 3px"
+    body_color: "#000000"
+    shadow_color: "#2D1B4E"
+    depth_effect: "2.5D parallax"
+    camera_movement: "cinematic gliding dolly 2-5s per shot"
+    lighting: "soft volumetric"
+    background: "clean minimal colorful 3D environment"
+    aspect_ratio: "9:16"
+    fps: 30
+    duration_per_shot: 6
+
   # Google Flow (Veo 3) - free tier
   google_flow:
     enabled: true
