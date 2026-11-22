@@ -213,6 +213,10 @@ class Orchestrator:
     async def run_cycle(self):
         """Execute one full production cycle."""
         import os
+        # Auto-start agents if not already running (for standalone CI runs)
+        if self.ideation_agent is None:
+            await self.start_agents()
+        
         use_fallback = os.environ.get("USE_FALLBACK", "false").lower() == "true"
         
         cycle_id = self._get_next_cycle_id()
