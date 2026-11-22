@@ -357,7 +357,7 @@ Output format (exactly):
             """, (idea_id,))
             conn.commit()
     
-    def generate_story(self, idea: Dict) -> Dict:
+    def generate_story(self, idea: Dict, adjustments: Optional[Dict] = None) -> Dict:
         """Generate full story, narration, shot list, titles, description."""
         logger.info(f"Generating story for idea #{idea['id']}...")
         
