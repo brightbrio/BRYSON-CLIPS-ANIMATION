@@ -36,9 +36,11 @@ jobs:
       - name: Create directories
         run: mkdir -p logs state auth assets output
 
-      - name: Run single cycle (fallback mode)
+      - name: Run single cycle (real API mode)
         env:
-          USE_FALLBACK: "true"
+          USE_FALLBACK: "false"
+          GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           cd "$(dirname "$0")/.."
           python - << 'PYEOF'

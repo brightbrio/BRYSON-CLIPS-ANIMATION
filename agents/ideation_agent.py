@@ -10,6 +10,7 @@ import sqlite3
 import logging
 import random
 import requests
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Optional
@@ -52,14 +53,73 @@ Output ONLY numbered list 1-10.
     
     def _call_llm(self, prompt: str) -> str:
         """Call the configured LLM backend."""
+        import os
+        # Auto-detect available backends from env vars
+        if os.environ.get("GEMINI_API_KEY") and self.backend in ("fallback", "ollama", "gemini"):
+            self.backend = "gemini"
+            logger.info("Using Gemini backend via env var")
+        elif os.environ.get("GLM_API_KEY") and self.backend in ("fallback", "ollama", "glm"):
+            self.backend = "glm"
+            logger.info("Using GLM backend via env var")
+        
         if self.backend == "ollama":
             return self._call_ollama(prompt)
         elif self.backend == "openai":
             return self._call_openai(prompt)
-        elif self.backend == "opencode":
-            return self._call_opencode(prompt)
+        elif self.backend == "glm":
+            return self._call_glm(prompt)
+        elif self.backend == "gemini":
+            return self._call_gemini(prompt)
         else:
             raise ValueError(f"Unknown backend: {self.backend}")
+    
+    def _call_glm(self, prompt: str) -> str:
+        """Call GLM (Zhipu AI) API - OpenAI compatible."""
+        api_key = os.environ.get("GLM_API_KEY", "")
+        if not api_key:
+            return self._fallback_ideas()
+        try:
+            resp = requests.post(
+                "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}"},
+                json={
+                    "model": "glm-4-flash",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.8
+                },
+                timeout=30
+            )
+            resp.raise_for_status()
+            return resp.json()["choices"][0]["message"]["content"]
+        except Exception as e:
+            logger.error(f"GLM call failed: {e}")
+            return self._fallback_ideas()
+    
+    def _call_gemini(self, prompt: str) -> str:
+        """Call Gemini API directly."""
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+        if not api_key:
+            return self._fallback_ideas()
+        try:
+            # Extract clean key (remove AQ. prefix if present for URL param)
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key.replace('AQ.', '')}"
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": 0.8}
+            }
+            resp = requests.post(url, json=payload, timeout=30)
+            resp.raise_for_status()
+            data = resp.json()
+            candidates = data.get("candidates", [])
+            if candidates:
+                content = candidates[0].get("content", {})
+                parts = content.get("parts", [])
+                if parts:
+                    return parts[0].get("text", "")
+            return self._fallback_ideas()
+        except Exception as e:
+            logger.error(f"Gemini call failed: {e}")
+            return self._fallback_ideas()
     
     def _call_ollama(self, prompt: str) -> str:
         import ollama

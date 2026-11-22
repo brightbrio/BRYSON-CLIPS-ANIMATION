@@ -135,14 +135,30 @@ class Orchestrator:
         self.production_agent = ProductionAgent(self.config)
         self.distribution_agent = DistributionAgent(self.config)
         
-        # Check for fallback mode
+        # Check for fallback mode OR auto-select best available backend
         import os
         use_fallback = os.environ.get("USE_FALLBACK", "false").lower() == "true"
         if use_fallback:
             logger.info("Running in FALLBACK MODE - using template-based generation")
-            # Set up fallback config
             self.config["ideation"]["backend"] = "fallback"
             self.config["production"]["google_flow"]["enabled"] = False
+        else:
+            # Auto-detect best backend from available env vars
+            if os.environ.get("GEMINI_API_KEY"):
+                self.config["ideation"]["backend"] = "gemini"
+                logger.info("Using Gemini backend (free tier)")
+            elif os.environ.get("GLM_API_KEY"):
+                self.config["ideation"]["backend"] = "glm"
+                logger.info("Using GLM backend (free tier)")
+            elif os.environ.get("OPENAI_API_KEY"):
+                self.config["ideation"]["backend"] = "openai"
+                logger.info("Using OpenAI backend")
+            elif os.environ.get("OLLAMA_HOST"):
+                self.config["ideation"]["backend"] = "ollama"
+                logger.info("Using Ollama backend")
+            else:
+                self.config["ideation"]["backend"] = "fallback"
+                logger.info("No API keys found - using fallback mode")
         
         await self.ideation_agent.start()
         await self.production_agent.start()
