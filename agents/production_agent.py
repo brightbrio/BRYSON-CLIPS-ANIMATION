@@ -40,6 +40,9 @@ class ProductionAgent:
     
     async def start(self):
         """Launch browser with persisted auth states."""
+        if not HAS_PLAYWRIGHT:
+            logger.info("Production agent started (no playwright available)")
+            return
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(headless=True)
         

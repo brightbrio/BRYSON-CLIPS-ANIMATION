@@ -25,6 +25,10 @@ class IdeationAgent:
         self.ollama_config = config["ideation"].get("ollama", {})
         self.master_prompt = self._load_master_prompt()
     
+    async def start(self):
+        """Initialize ideation agent (no browser needed)."""
+        logger.info("Ideation agent started")
+    
     def _load_master_prompt(self) -> str:
         """Load the master prompt from file."""
         prompt_path = Path(self.config["paths"]["prompts_dir"]) / "master_prompt.md"

@@ -103,6 +103,9 @@ class DistributionAgent:
     
     async def start(self):
         """Launch browser with per-platform auth states."""
+        if not HAS_PLAYWRIGHT:
+            logger.info("Distribution agent started (no playwright available)")
+            return
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(headless=True)
         
