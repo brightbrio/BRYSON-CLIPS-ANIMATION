@@ -143,13 +143,13 @@ class Orchestrator:
             self.config["ideation"]["backend"] = "fallback"
             self.config["production"]["google_flow"]["enabled"] = False
         else:
-            # Auto-detect best backend from available env vars
-            if os.environ.get("GEMINI_API_KEY"):
-                self.config["ideation"]["backend"] = "gemini"
-                logger.info("Using Gemini backend (free tier)")
-            elif os.environ.get("GLM_API_KEY"):
+            # Auto-detect best backend from available env vars — try GLM first (reliable CN endpoint)
+            if os.environ.get("GLM_API_KEY"):
                 self.config["ideation"]["backend"] = "glm"
                 logger.info("Using GLM backend (free tier)")
+            elif os.environ.get("GEMINI_API_KEY"):
+                self.config["ideation"]["backend"] = "gemini"
+                logger.info("Using Gemini backend (free tier)")
             elif os.environ.get("OPENAI_API_KEY"):
                 self.config["ideation"]["backend"] = "openai"
                 logger.info("Using OpenAI backend")

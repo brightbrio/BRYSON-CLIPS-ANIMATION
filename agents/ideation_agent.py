@@ -54,13 +54,13 @@ Output ONLY numbered list 1-10.
     def _call_llm(self, prompt: str) -> str:
         """Call the configured LLM backend."""
         import os
-        # Auto-detect available backends from env vars
-        if os.environ.get("GEMINI_API_KEY") and self.backend in ("fallback", "ollama", "gemini"):
-            self.backend = "gemini"
-            logger.info("Using Gemini backend via env var")
-        elif os.environ.get("GLM_API_KEY") and self.backend in ("fallback", "ollama", "glm"):
+        # Auto-detect available backends from env vars — prefer GLM (reliable CN endpoint)
+        if os.environ.get("GLM_API_KEY") and self.backend in ("fallback", "ollama", "glm"):
             self.backend = "glm"
             logger.info("Using GLM backend via env var")
+        elif os.environ.get("GEMINI_API_KEY") and self.backend in ("fallback", "ollama", "gemini"):
+            self.backend = "gemini"
+            logger.info("Using Gemini backend via env var")
         
         if self.backend == "ollama":
             return self._call_ollama(prompt)
