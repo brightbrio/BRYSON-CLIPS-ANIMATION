@@ -4,6 +4,7 @@ DISTRIBUTION AGENT
 Cross-platform posting to YouTube Shorts, TikTok, Facebook Reels, Instagram Reels.
 Handles scheduling, engagement replies, and analytics collection.
 """
+from __future__ import annotations
 
 import asyncio
 import logging
