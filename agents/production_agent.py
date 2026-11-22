@@ -12,7 +12,11 @@ import sqlite3
 import os
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
-from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+try:
+    from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
 
 logger = logging.getLogger(__name__)
 

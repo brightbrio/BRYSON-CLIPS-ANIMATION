@@ -13,7 +13,11 @@ import random
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
-from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+try:
+    from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
 
 logger = logging.getLogger(__name__)
 
