@@ -96,16 +96,17 @@ Output ONLY numbered list 1-10.
             return self._fallback_ideas()
     
     def _call_gemini(self, prompt: str) -> str:
-        """Call Gemini API directly."""
-        api_key = os.environ.get("GEMINI_API_KEY", "")
+        """Call Gemini API via REST with proper key handling."""
+        api_key = os.environ.get("GEMINI_API_KEY", "").strip()
         if not api_key:
             return self._fallback_ideas()
         try:
-            # Extract clean key (remove AQ. prefix if present for URL param)
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key.replace('AQ.', '')}"
+            # Clean key - remove AQ. or AIza prefix if present
+            clean_key = api_key.replace("AQ.", "").replace("AIza", "")
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={clean_key}"
             payload = {
                 "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"temperature": 0.8}
+                "generationConfig": {"temperature": 0.8, "maxOutputTokens": 2048}
             }
             resp = requests.post(url, json=payload, timeout=30)
             resp.raise_for_status()
@@ -115,7 +116,10 @@ Output ONLY numbered list 1-10.
                 content = candidates[0].get("content", {})
                 parts = content.get("parts", [])
                 if parts:
-                    return parts[0].get("text", "")
+                    text = parts[0].get("text", "").strip()
+                    if text:
+                        return text
+            logger.warning("Gemini returned empty content")
             return self._fallback_ideas()
         except Exception as e:
             logger.error(f"Gemini call failed: {e}")
@@ -257,11 +261,22 @@ Output format (exactly):
             teaser = parts[2].replace('Teaser:', '').strip()
             source = parts[3].replace('Source:', '').strip()
             
+            # Extract topic and era from logline
+            topic = logline  # e.g., "How a Mirror Rigged a Horse Race"
+            era = ""
+            # Try to extract year from logline or teaser
+            import re
+            year_match = re.search(r'\b(1\d{3}|20\d{3})\b', f"{logline} {teaser}")
+            if year_match:
+                era = year_match.group(1)
+            
             ideas.append({
-                'logline': logline,
+                'topic': topic,
                 'prop': prop,
                 'teaser': teaser,
-                'source': source
+                'era': era,
+                'source': source,
+                'logline': logline
             })
         
         return ideas[:10]
