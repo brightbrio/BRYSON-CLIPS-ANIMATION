@@ -280,6 +280,7 @@ Output format (exactly):
                 era = year_match.group(1)
             
             ideas.append({
+                'id': len(ideas) + 1,
                 'topic': topic,
                 'prop': prop,
                 'teaser': teaser,
