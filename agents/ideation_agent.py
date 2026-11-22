@@ -83,14 +83,23 @@ Output ONLY numbered list 1-10.
                 "https://open.bigmodel.cn/api/paas/v4/chat/completions",
                 headers={"Authorization": f"Bearer {api_key}"},
                 json={
-                    "model": "glm-4-flash",
+                    "model": "glm-4.5-flash",
                     "messages": [{"role": "user", "content": prompt}],
-                    "temperature": 0.8
+                    "temperature": 0.8,
+                    "max_tokens": 2048
                 },
-                timeout=30
+                timeout=60
             )
             resp.raise_for_status()
-            return resp.json()["choices"][0]["message"]["content"]
+            data = resp.json()
+            choices = data.get("choices", [])
+            if choices:
+                msg = choices[0].get("message", {})
+                # Reasoning models (glm-4.5-flash) may put text in reasoning_content
+                text = msg.get("content") or msg.get("reasoning_content", "")
+                return text.strip() if text else self._fallback_ideas()
+            logger.warning("GLM returned no choices")
+            return self._fallback_ideas()
         except Exception as e:
             logger.error(f"GLM call failed: {e}")
             return self._fallback_ideas()

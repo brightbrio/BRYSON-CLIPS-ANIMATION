@@ -22,7 +22,7 @@ orchestrator:
   retry_delay_minutes: 15
 
 ideation:
-  model: "glm-4-flash"  # Free via Z.ai / GLM
+  model: "glm-4.5-flash"  # Free via Z.ai / GLM
   ideas_per_batch: 10
   min_novelty_score: 7
   max_historical_age_years: 5000
