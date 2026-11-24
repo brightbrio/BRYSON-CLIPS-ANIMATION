@@ -274,6 +274,25 @@ class Orchestrator:
             if not ideas:
                 raise Exception("No ideas generated")
             
+            # Store all generated ideas in DB for future reference
+            with sqlite3.connect(self.db_path) as conn:
+                for idea in ideas:
+                    try:
+                        conn.execute("""
+                            INSERT OR IGNORE INTO ideas (id, logline, prop, teaser, status, created_at, fact_checked, source_url)
+                            VALUES (?, ?, ?, ?, 'pending', ?, 1, ?)
+                        """, (
+                            idea.get('id'), 
+                            idea.get('logline', idea.get('topic', '')), 
+                            idea.get('prop', ''), 
+                            idea.get('teaser', ''),
+                            datetime.now(),
+                            idea.get('source', '')
+                        ))
+                    except Exception as e:
+                        logger.warning(f"Failed to store idea: {e}")
+                conn.commit()
+            
             best_idea = ideas[0]  # Already scored and sorted
             logger.info(f"Selected idea: {best_idea['topic']} | Prop: {best_idea['prop']}")
             
