@@ -43,6 +43,10 @@ class ProductionAgent:
         if not HAS_PLAYWRIGHT:
             logger.info("Production agent started (no playwright available)")
             return
+        # Skip browser launch in fallback/CI mode
+        if not self.config["production"]["google_flow"]["enabled"]:
+            logger.info("Production agent started (fallback mode - browser disabled)")
+            return
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(headless=True)
         

@@ -41,18 +41,16 @@ jobs:
           USE_FALLBACK: "true"
           GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          cd "$(dirname "$0")/.."
-          python - << 'PYEOF'
-          import os
-          import sys
-          sys.path.insert(0, '.')
-          os.chdir(os.environ.get('GITHUB_WORKSPACE', '.'))
-          import asyncio
-          from orchestrator import Orchestrator
-          orch = Orchestrator()
-          asyncio.run(orch.run_cycle())
-          PYEOF
+        run: python run_cycle_ci.py
+
+      - name: Upload state DB
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: state-db
+          path: state/videos.db
+          retention-days: 7
+          if-no-files-found: warn
 
       - name: Upload logs
         if: always()
