@@ -78,61 +78,85 @@ Output ONLY numbered list 1-10.
         api_key = os.environ.get("GLM_API_KEY", "")
         if not api_key:
             return self._fallback_ideas()
-        try:
-            resp = requests.post(
-                "https://open.bigmodel.cn/api/paas/v4/chat/completions",
-                headers={"Authorization": f"Bearer {api_key}"},
-                json={
-                    "model": "glm-4.5-flash",
-                    "messages": [{"role": "user", "content": prompt}],
-                    "temperature": 0.8,
-                    "max_tokens": 2048
-                },
-                timeout=60
-            )
-            resp.raise_for_status()
-            data = resp.json()
-            choices = data.get("choices", [])
-            if choices:
-                msg = choices[0].get("message", {})
-                # Reasoning models (glm-4.5-flash) may put text in reasoning_content
-                text = msg.get("content") or msg.get("reasoning_content", "")
-                return text.strip() if text else self._fallback_ideas()
-            logger.warning("GLM returned no choices")
-            return self._fallback_ideas()
-        except Exception as e:
-            logger.error(f"GLM call failed: {e}")
-            return self._fallback_ideas()
+        import time as _time
+        for attempt in range(3):
+            try:
+                resp = requests.post(
+                    "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+                    headers={"Authorization": f"Bearer {api_key}"},
+                    json={
+                        "model": "glm-4.5-flash",
+                        "messages": [{"role": "user", "content": prompt}],
+                        "temperature": 0.8,
+                        "max_tokens": 2048
+                    },
+                    timeout=60
+                )
+                if resp.status_code == 429:
+                    wait = (attempt + 1) * 5
+                    logger.warning(f"GLM rate limited (attempt {attempt+1}/3), waiting {wait}s")
+                    _time.sleep(wait)
+                    continue
+                resp.raise_for_status()
+                data = resp.json()
+                choices = data.get("choices", [])
+                if choices:
+                    msg = choices[0].get("message", {})
+                    # Reasoning models may put text in reasoning_content
+                    text = msg.get("content") or msg.get("reasoning_content", "")
+                    return text.strip() if text else self._fallback_ideas()
+                logger.warning("GLM returned no choices")
+                return self._fallback_ideas()
+            except Exception as e:
+                logger.error(f"GLM call failed (attempt {attempt+1}/3): {e}")
+                if attempt < 2:
+                    _time.sleep((attempt + 1) * 3)
+                else:
+                    return self._fallback_ideas()
     
     def _call_gemini(self, prompt: str) -> str:
-        """Call Gemini API via REST with proper key handling."""
+        """Call Gemini API via REST - tries multiple models for best compatibility."""
         api_key = os.environ.get("GEMINI_API_KEY", "").strip()
         if not api_key:
             return self._fallback_ideas()
-        try:
-            # Clean key - remove AQ. or AIza prefix if present
-            clean_key = api_key.replace("AQ.", "").replace("AIza", "")
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={clean_key}"
-            payload = {
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {"temperature": 0.8, "maxOutputTokens": 2048}
-            }
-            resp = requests.post(url, json=payload, timeout=30)
-            resp.raise_for_status()
-            data = resp.json()
-            candidates = data.get("candidates", [])
-            if candidates:
-                content = candidates[0].get("content", {})
-                parts = content.get("parts", [])
-                if parts:
-                    text = parts[0].get("text", "").strip()
-                    if text:
-                        return text
-            logger.warning("Gemini returned empty content")
-            return self._fallback_ideas()
-        except Exception as e:
-            logger.error(f"Gemini call failed: {e}")
-            return self._fallback_ideas()
+        import time as _time
+        clean_key = api_key.replace("AQ.", "")
+        # Try multiple models in order of availability
+        models = ["gemini-3.1-pro-preview", "gemini-3-flash-preview", "gemini-2.5-flash"]
+        for model in models:
+            for attempt in range(2):
+                try:
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={clean_key}"
+                    payload = {
+                        "contents": [{"parts": [{"text": prompt}]}],
+                        "generationConfig": {"temperature": 0.8, "maxOutputTokens": 2048}
+                    }
+                    resp = requests.post(url, json=payload, timeout=30)
+                    if resp.status_code == 429:
+                        _time.sleep(3)
+                        continue
+                    if resp.status_code == 503:
+                        logger.warning(f"Gemini {model} unavailable, trying next...")
+                        break
+                    if resp.status_code == 404:
+                        logger.warning(f"Gemini {model} not found, trying next...")
+                        break
+                    resp.raise_for_status()
+                    data = resp.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        content = candidates[0].get("content", {})
+                        parts = content.get("parts", [])
+                        if parts:
+                            text = parts[0].get("text", "").strip()
+                            if text:
+                                return text
+                    return self._fallback_ideas()
+                except Exception as e:
+                    logger.error(f"Gemini {model} error (attempt {attempt+1}/2): {e}")
+                    if attempt < 1:
+                        _time.sleep(2)
+        return self._fallback_ideas()
     
     def _call_ollama(self, prompt: str) -> str:
         import ollama
