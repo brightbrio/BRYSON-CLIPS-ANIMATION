@@ -1,0 +1,2 @@
+@echo off
+powershell -command "Get-Content -Path 'C:\Users\Administrator\bryson-clips-animation\agents\ideation_agent.py' -ReadCount 0 | Select-Object -Index 396 | ForEach-Object { Write-Host 'Line 397 (index 396): ' + $_.ToString() }"
