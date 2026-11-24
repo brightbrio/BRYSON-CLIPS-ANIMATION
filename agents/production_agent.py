@@ -106,7 +106,8 @@ class ProductionAgent:
         """Generate character sheet in Google Flow, return Flow image ID."""
         # Fallback: return placeholder if browser not available
         if not hasattr(self, 'page') or self.page is None:
-            return f"char_{char_spec['name']}_fallback"
+            char_name = char_spec.get('name', char_spec.get('characters', [{}])[0].get('name', 'unknown'))
+            return f"char_{char_name}_fallback"
         
         await self.page.goto("https://flow.google.com")
         await self.page.wait_for_load_state("networkidle")
