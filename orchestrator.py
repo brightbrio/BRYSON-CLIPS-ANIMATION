@@ -279,7 +279,11 @@ class Orchestrator:
             
             # 2. STORY GENERATION: Full story structure
             logger.info("Phase 2: Story Generation")
-            story = self.ideation_agent.generate_story(best_idea, adjustments)
+            if use_fallback:
+                logger.info("Using FALLBACK story generation - template-based")
+                story = self.ideation_agent._fallback_story(best_idea)
+            else:
+                story = self.ideation_agent.generate_story(best_idea, adjustments)
             
             # 3. CHARACTER SHEETS: Consistent character prompts
             logger.info("Phase 3: Character Sheets")
