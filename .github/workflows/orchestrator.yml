@@ -38,7 +38,6 @@ jobs:
 
       - name: Run single cycle (real API mode)
         env:
-          USE_FALLBACK: "true"
           GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python run_cycle_ci.py
