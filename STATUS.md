@@ -41,24 +41,32 @@ GLM rate limited (attempt 1/3), waiting 5s
 
 ---
 
-## To Unlock Real LLM Ideation
+## 🔑 CURRENT ISSUE: Gemini Keys Are Wrong Format
 
-### Option A: Fix Gemini (Easiest)
-Get a fresh Gemini API key with available quota:
-1. Go to https://aistudio.google.com/app/apikey
-2. Create a NEW project (not the existing one that's over quota)
-3. Copy the key (starts with `AIzaSy...`)
-4. Update secret: `gh secret set GEMINI_API_KEY --body "AIzaSy..." --repo brightbrio/BRYSON-CLIPS-ANIMATION`
+Both keys you've provided are **OAuth access tokens** (`AQ.` prefix), not REST API keys. The Gemini REST API requires keys starting with `AIzaSy...`.
 
-### Option B: Use GLM with Paid Plan
-Upgrade the Zhipu AI account to paid tier (https://open.bigmodel.cn/usercenter/subscription)
-Or deploy the workflow on a server in China to avoid CN-China firewall issues.
+### How to Get a Real API Key
 
-### Option C: Switch to OpenRouter
-Sign up at https://openrouter.ai/ (free tier available)
-- One API key works for 50+ models including GPT-4o, Claude Sonnet, Gemini
-- Better rate limits than free tiers
-- Set as GLM_API_KEY env var and update the model endpoint
+The keys from https://aistudio.google.com/app/apikey are **access tokens** — they work inside the Gemini website/app but NOT for the REST API.
+
+**To get a real REST API key:**
+
+1. Go to **Google Cloud Console**: https://console.cloud.google.com/apis/credentials
+2. Click **+ CREATE CREDENTIALS** → **API key**
+3. This creates a key like: `AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+4. Then go to the same page and click on your new API key → **Restrict key** → Add restrictions
+5. For Gemini: Add restriction `generativelanguage.googleapis.com`
+6. Copy the `AIzaSy...` key
+7. Update GitHub secret:
+   ```
+   gh secret set GEMINI_API_KEY --body "AIzaSy..." --repo brightbrio/BRYSON-CLIPS-ANIMATION
+   ```
+
+**Alternative: Use OpenRouter (Recommended)**
+- Single sign-up at https://openrouter.ai/
+- Free tier: 50K tokens/day
+- One key works for: GPT-4o, Claude 3.5 Sonnet, Gemini Pro, Llama 3.1
+- No per-project setup needed
 
 ---
 
