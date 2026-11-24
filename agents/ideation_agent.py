@@ -267,8 +267,15 @@ Output format (exactly):
             
             logline = parts[0].split('.', 1)[1].strip() if '.' in parts[0] else parts[0].strip()
             prop = parts[1].replace('Prop:', '').strip()
-            teaser = parts[2].replace('Teaser:', '').strip()
-            source = parts[3].replace('Source:', '').strip()
+            teaser_raw = parts[2].replace('Teaser:', '').strip()
+            
+            # Extract source URL from the entire line (LLM/fallback may place it
+            # inside the teaser segment while parts[3] only holds a label)
+            import re
+            url_match = re.search(r'https?://[^\s|]+', line)
+            source = url_match.group(0).strip() if url_match else parts[3].replace('Source:', '').strip()
+            # Strip any embedded "Source: <url>" from the teaser text
+            teaser = re.sub(r'\s*Source:\s*https?://[^\s|]+', '', teaser_raw).strip()
             
             # Extract topic and era from logline
             topic = logline  # e.g., "How a Mirror Rigged a Horse Race"
@@ -299,6 +306,13 @@ Output format (exactly):
         source_url = idea.get('source', '')
         if not source_url:
             return False
+            
+        # Fix Wikipedia URL format issue
+        if 'wikipedia.org' in source_url and not source_url.startswith('https://'):
+            if source_url.startswith('http://'):
+                source_url = 'https://' + source_url[7:]
+            else:
+                source_url = 'https://' + source_url
         
         try:
             # Quick check: fetch source, verify key terms exist

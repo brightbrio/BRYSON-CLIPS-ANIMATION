@@ -110,6 +110,30 @@ class Orchestrator:
                     FOREIGN KEY (video_id) REFERENCES videos(id)
                 );
                 
+                CREATE TABLE IF NOT EXISTS ideas (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    logline TEXT,
+                    prop TEXT,
+                    teaser TEXT,
+                    era TEXT,
+                    source_url TEXT,
+                    story_json TEXT,
+                    character_sheet TEXT,
+                    title_main TEXT,
+                    status TEXT DEFAULT 'pending',
+                    fact_checked INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    selected_at TIMESTAMP
+                );
+                
+                CREATE TABLE IF NOT EXISTS characters (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    flow_id TEXT,
+                    prompt_text TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                
                 CREATE TABLE IF NOT EXISTS cycle_log (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     cycle_id INTEGER,
@@ -124,6 +148,8 @@ class Orchestrator:
                 CREATE INDEX IF NOT EXISTS idx_videos_cycle ON videos(cycle_id);
                 CREATE INDEX IF NOT EXISTS idx_posts_video ON posts(video_id);
                 CREATE INDEX IF NOT EXISTS idx_perf_video ON performance_log(video_id);
+                CREATE INDEX IF NOT EXISTS idx_ideas_status ON ideas(status);
+                CREATE INDEX IF NOT EXISTS idx_characters_name ON characters(name);
             """)
             conn.commit()
     
@@ -253,11 +279,11 @@ class Orchestrator:
             
             # 2. STORY GENERATION: Full story structure
             logger.info("Phase 2: Story Generation")
-            story = await self.ideation_agent.generate_story(best_idea, adjustments)
+            story = self.ideation_agent.generate_story(best_idea, adjustments)
             
             # 3. CHARACTER SHEETS: Consistent character prompts
             logger.info("Phase 3: Character Sheets")
-            character_sheet = await self.production_agent.generate_character_sheet(story, adjustments)
+            character_sheet = await self.production_agent.generate_character_sheet(story)
             
             # 4. VIDEO PROMPTS: 10-shot breakdown
             logger.info("Phase 4: Video Prompts")

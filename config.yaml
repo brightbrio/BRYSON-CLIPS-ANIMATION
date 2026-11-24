@@ -63,7 +63,9 @@ production:
     enabled: true
     model: "veo-3"
     resolution: "720p"  # Free tier max
-    duration_seconds: 10
+    video_duration_sec: 10  # Duration per clip in seconds (for prompt generation)
+    duration_seconds: 10  # Duration per clip in seconds (for Google Flow API)
+    clips_per_video: 10
     clips_per_video: 10
     style_prompt: >
       Stickman animation, white circular marker-drawn heads, thick black outlines (3px),

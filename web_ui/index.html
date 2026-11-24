@@ -141,6 +141,10 @@
         .platform-card.connected .platform-status { color: var(--bryson-success); }
         .platform-card.authenticating .platform-status { color: var(--bryson-warning); }
         
+        /* Platform Actions */
+        .platform-actions { display: flex; flex-direction: column; gap: 6px; min-width: 120px; }
+        .platform-actions .btn { width: 100%; font-size: 0.75rem; padding: 8px 12px; }
+        
         /* Buttons */
         .btn { padding: 10px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-primary { background: var(--bryson-gradient); color: #fff; width: 100%; }
@@ -284,31 +288,27 @@
                 </div>
                 
                 <ul class="checklist" id="deploy-checklist">
-                    <li><input type="checkbox" id="check-git" onchange="updateChecklist(this)"><label for="check-git">Git initialized and committed</label></li>
-                    <li><input type="checkbox" id="check-repo" onchange="updateChecklist(this)"><label for="check-repo">GitHub repository created</label></li>
-                    <li><input type="checkbox" id="check-push" onchange="updateChecklist(this)"><label for="check-push">Code pushed to GitHub</label></li>
-                    <li><input type="checkbox" id="check-secrets" onchange="updateChecklist(this)"><label for="check-secrets">Secrets added (GLM_API_KEY, GEMINI_API_KEY)</label></li>
-                    <li><input type="checkbox" id="check-workflow" onchange="updateChecklist(this)"><label for="check-workflow">Workflow enabled and running</label></li>
+                    <li class="completed"><input type="checkbox" id="check-git" onchange="updateChecklist(this)" checked><label for="check-git">Git initialized and committed ✓</label></li>
+                    <li class="completed"><input type="checkbox" id="check-repo" onchange="updateChecklist(this)" checked><label for="check-repo">GitHub repository exists (brightbrio/BRYSON-CLIPS-ANIMATION) ✓</label></li>
+                    <li class="completed"><input type="checkbox" id="check-push" onchange="updateChecklist(this)" checked><label for="check-push">Code pushed to GitHub ✓</label></li>
+                    <li><input type="checkbox" id="check-secrets" onchange="updateChecklist(this)"><label for="check-secrets">Secrets added (GEMINI_API_KEY, YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, YOUTUBE_CHANNEL_ID, TIKTOK auth)</label></li>
+                    <li><input type="checkbox" id="check-workflow" onchange="updateChecklist(this)"><label for="check-workflow">Workflow running (check Actions tab)</label></li>
                 </ul>
                 
                 <div class="terminal" id="terminal">
-                    <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command"> git init</span></div>
-                    <div class="terminal-line"><span class="terminal-output">Initialized empty Git repository</span></div>
+                    <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command"> git status</span></div>
+                    <div class="terminal-line"><span class="terminal-output">On branch main. Your branch is up to date with origin/main.</span></div>
                     <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command"> git add .</span></div>
-                    <div class="terminal-line"><span class="terminal-output">Added all files</span></div>
-                    <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command"> git commit -m "Bryson Clips Animation automation"</span></div>
+                    <div class="terminal-line"><span class="terminal-output">Added all changes</span></div>
+                    <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command"> git commit -m "Update: YouTube + TikTok auth, HM Recaps + Hasahya Motivated"</span></div>
                     <div class="terminal-line"><span class="terminal-output">Committed successfully</span></div>
-                    <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command"> git remote add origin https://github.com/YOUR_USERNAME/bryson-clips-animation.git</span></div>
-                    <div class="terminal-line"><span class="terminal-output">Remote added</span></div>
-                    <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command"> git branch -M main</span></div>
-                    <div class="terminal-line"><span class="terminal-output">Branch renamed to main</span></div>
-                    <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command"> git push -u origin main</span></div>
-                    <div class="terminal-line"><span class="terminal-output">Pushed to GitHub!</span></div>
+                    <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command"> git push origin main</span></div>
+                    <div class="terminal-line"><span class="terminal-output">Pushed to GitHub! Pipeline will run on next cron.</span></div>
                 </div>
                 
                 <div class="btn-group" style="margin-top: 20px;">
                     <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
-                    <button class="btn btn-primary" onclick="openGitHub()">Open GitHub to Create Repo</button>
+                    <button class="btn btn-primary" onclick="openGitHub()">Open Existing GitHub Repository</button>
                 </div>
             </div>
             
@@ -355,6 +355,15 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOMContentLoaded fired');
+            const grid = document.getElementById('platform-grid');
+            console.log('platform-grid element:', grid);
+            if (!grid) {
+                console.error('FATAL: platform-grid element NOT FOUND in DOM!');
+                // Try to find it
+                const allDivs = document.querySelectorAll('div[id*="platform"]');
+                console.log('All platform-related divs:', allDivs);
+            }
             renderPlatforms();
             loadAuthStates();
             log('info', 'Welcome to Bryson Clips Animation Setup Wizard!');
@@ -362,16 +371,30 @@
         });
 
         function renderPlatforms() {
+            console.log('renderPlatforms called');
             const grid = document.getElementById('platform-grid');
-            grid.innerHTML = PLATFORMS.map(p => `
-                <div class="platform-card" id="platform-${p.id}" onclick="authenticatePlatform('${p.id}')">
+            console.log('grid element:', grid);
+            if (!grid) {
+                console.error('platform-grid element NOT FOUND!');
+                return;
+            }
+            const html = PLATFORMS.map(p => `
+                <div class="platform-card" id="platform-${p.id}">
                     <div class="platform-icon">${p.icon}</div>
                     <div class="platform-info">
                         <div class="platform-name">${p.name}</div>
-                        <div class="platform-status" id="status-${p.id}">Click to connect</div>
+                        <div class="platform-status" id="status-${p.id}">Click Connect to start</div>
+                    </div>
+                    <div class="platform-actions">
+                        <button class="btn btn-primary" id="connect-${p.id}" onclick="authenticatePlatform('${p.id}')">Connect</button>
+                        <button class="btn btn-secondary save-auth-btn" id="save-${p.id}" onclick="saveAuth('${p.id}')" style="display:none;">Save Auth</button>
                     </div>
                 </div>
             `).join('');
+            console.log('Setting innerHTML:', html.length, 'chars');
+            grid.innerHTML = html;
+            console.log('innerHTML set. grid.innerHTML length:', grid.innerHTML.length);
+            console.log('grid children:', grid.children.length);
         }
 
         function loadAuthStates() {
@@ -388,18 +411,30 @@
         function updatePlatformUI(platformId, status) {
             const card = document.getElementById(`platform-${platformId}`);
             const statusEl = document.getElementById(`status-${platformId}`);
+            const connectBtn = document.getElementById(`connect-${platformId}`);
+            const saveBtn = document.getElementById(`save-${platformId}`);
             if (!card || !statusEl) return;
             
             card.classList.remove('connected', 'authenticating', 'error');
             if (status === 'connected') {
                 card.classList.add('connected');
                 statusEl.textContent = 'Connected ✓';
+                if (connectBtn) connectBtn.style.display = 'none';
+                if (saveBtn) saveBtn.style.display = 'none';
             } else if (status === 'authenticating') {
                 card.classList.add('authenticating');
                 statusEl.textContent = 'Opening browser...';
+                if (connectBtn) connectBtn.style.display = 'none';
+                if (saveBtn) saveBtn.style.display = 'block';
             } else if (status === 'error') {
                 card.classList.add('error');
-                statusEl.textContent = 'Failed - click to retry';
+                statusEl.textContent = 'Failed - click Connect to retry';
+                if (connectBtn) connectBtn.style.display = 'block';
+                if (saveBtn) saveBtn.style.display = 'none';
+            } else {
+                // default state
+                if (connectBtn) connectBtn.style.display = 'block';
+                if (saveBtn) saveBtn.style.display = 'none';
             }
         }
 
@@ -408,25 +443,76 @@
             if (!platform) return;
             
             updatePlatformUI(platformId, 'authenticating');
-            log('info', `Opening ${platform.name} for authentication...`);
+            log('info', `Opening ${platform.name} in new tab...`);
             
-            window.open(platform.url, '_blank', 'noopener,noreferrer');
+            // Open in current browser (new tab) - this uses YOUR logged-in session
+            const authTab = window.open(platform.url, '_blank', 'noopener,noreferrer');
             
-            // Simulate auth completion after user logs in
-            setTimeout(() => {
-                const authData = {
-                    platform_id: platformId,
-                    status: 'success',
-                    message: 'Connected ✓',
-                    timestamp: Date.now()
-                };
-                authStates[platformId] = authData;
-                localStorage.setItem(`auth_${platformId}`, JSON.stringify(authData));
-                updatePlatformUI(platformId, 'connected');
-                log('success', `${platform.name} connected!`);
-                updateProgress();
-                updateVerifyBtn();
-            }, 2000);
+            // Always try to start the automation browser - this is the actual session saver
+            let automationStarted = false;
+            try {
+                const response = await fetch('/api/auth/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ platform: platformId })
+                });
+                const data = await response.json();
+                
+                if (data.session_id) {
+                    window.currentAuthSession = { platform: platformId, session_id: data.session_id };
+                    automationStarted = true;
+                }
+            } catch (err) {
+                log('error', `Automation browser failed: ${err}`);
+            }
+            
+            if (authTab) {
+                log('info', `${platform.name} opened in new tab. Log in there (HM Recaps / Hasahya Motivated), then return here and click "Save Auth".`);
+                if (!automationStarted) {
+                    log('warning', 'Automation browser also started in background for session saving.');
+                }
+            } else {
+                log('warning', 'Popup blocked - but automation browser is running. Log in there, then click "Save Auth".');
+            }
+            
+            // Keep Save Auth button visible if automation browser started (regardless of popup)
+            if (automationStarted) {
+                // Override the 'authenticating' state to keep Save Auth visible
+                const saveBtn = document.getElementById(`save-${platformId}`);
+                if (saveBtn) saveBtn.style.display = 'block';
+            } else {
+                updatePlatformUI(platformId, 'error');
+            }
+        }
+        
+        async function saveAuth(platformId) {
+            log('info', `Saving auth for ${platformId}...`);
+            try {
+                const response = await fetch('/api/auth/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ platform: platformId })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    log('success', `${PLATFORMS.find(p => p.id === platformId).name} auth saved!`);
+                    updatePlatformUI(platformId, 'connected');
+                    
+                    // Remove Save Auth button
+                    const card = document.getElementById(`platform-${platformId}`);
+                    const saveBtn = card?.querySelector('.save-auth-btn');
+                    if (saveBtn) saveBtn.remove();
+                    
+                    updateProgress();
+                    updateVerifyBtn();
+                    window.currentAuthSession = null;
+                } else {
+                    log('error', `Failed to save auth: ${data.message}`);
+                }
+            } catch (err) {
+                log('error', `Save auth failed: ${err}`);
+            }
         }
 
         function updateProgress() {
@@ -450,19 +536,24 @@
         async function verifyAllConnections() {
             log('info', 'Verifying all platform connections...');
             
-            for (const platform of PLATFORMS) {
-                const saved = localStorage.getItem(`auth_${platform.id}`);
+            // Load auth states from localStorage into authStates object
+            PLATFORMS.forEach(p => {
+                const saved = localStorage.getItem(`auth_${p.id}`);
                 if (saved) {
-                    const data = JSON.parse(saved);
-                    if (data.status === 'success') {
-                        log('success', `${platform.name}: Verified ✓`);
-                    } else {
-                        log('error', `${platform.name}: Not authenticated`);
-                    }
+                    authStates[p.id] = JSON.parse(saved);
+                }
+            });
+            
+            for (const platform of PLATFORMS) {
+                const state = authStates[platform.id];
+                if (state && state.status === 'success') {
+                    log('success', `${platform.name}: Verified ✓`);
                 } else {
                     log('error', `${platform.name}: Not connected`);
                 }
             }
+            
+            updateVerifyBtn();
             
             const connected = Object.keys(authStates).filter(id => authStates[id].status === 'success').length;
             if (connected === PLATFORMS.length) {
@@ -513,8 +604,8 @@
         }
 
         function openGitHub() {
-            window.open('https://github.com/new', '_blank');
-            log('info', 'Opening GitHub to create new repository...');
+            window.open('https://github.com/brightbrio/BRYSON-CLIPS-ANIMATION', '_blank');
+            log('info', 'Opening existing GitHub repository...');
         }
 
         function updateChecklist(cb) {

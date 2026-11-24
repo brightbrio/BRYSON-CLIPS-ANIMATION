@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.tox/
+
+# State & Auth (local data)
+state/
+auth/
+*.db
+*.sqlite
+*.sqlite3
+
+# Temp files from debugging
+check_*.py
+check_*.mjs
+qa_script*.mjs
+fix_*.py
+temp_*
+test_*.py
+verify_*.py
+YOUTUBE_SETUP.md
+SYSTEM_STATUS_SUMMARY.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
