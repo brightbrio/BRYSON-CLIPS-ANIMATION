@@ -49,101 +49,50 @@
             width: 150px;
             height: 2px;
             background: var(--bryson-gradient);
-            border-radius: 2px;
-            opacity: 0.5;
+            border-radius: 1px;
         }
-        .logo { 
-            font-size: clamp(1.5rem, 4vw, 2.5rem); 
-            font-weight: 900; 
-            letter-spacing: -0.02em;
-            background: var(--bryson-gradient);
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            background-clip: text;
-            margin-bottom: 4px;
-        }
-        .subtitle { color: var(--bryson-text-muted); font-size: 0.9rem; font-weight: 400; }
+        .logo { font-size: 1.5rem; font-weight: 800; background: var(--bryson-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; }
+        .subtitle { font-size: 0.75rem; color: var(--bryson-text-muted); margin-top: 2px; }
         
-        /* Progress Steps */
-        .steps { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; position: relative; }
-        .steps::before {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 10%;
-            right: 10%;
-            height: 2px;
-            background: var(--bryson-card-border);
-            z-index: 0;
-        }
-        .step { display: flex; flex-direction: column; align-items: center; opacity: 0.5; transition: all 0.3s; position: relative; z-index: 1; flex: 1; max-width: 90px; }
-        .step.active { opacity: 1; }
-        .step.completed { opacity: 1; }
-        .step-number { 
-            width: 40px; height: 40px; border-radius: 50%; 
-            background: var(--bryson-card); 
-            border: 2px solid var(--bryson-card-border);
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 1rem; font-weight: 700; 
-            margin-bottom: 6px; 
-            color: var(--bryson-text-muted);
-            transition: all 0.3s;
-            box-shadow: 0 0 0 3px var(--bryson-darker);
-        }
-        .step.active .step-number { 
-            background: var(--bryson-gradient); 
-            border-color: var(--bryson-orange); 
-            color: #fff;
-            box-shadow: 0 0 0 3px var(--bryson-darker), 0 0 16px rgba(255, 107, 53, 0.4);
-        }
-        .step.completed .step-number { 
-            background: var(--bryson-success); 
-            border-color: var(--bryson-success); 
-            color: #fff;
-        }
-        .step-label { font-size: 0.7rem; color: var(--bryson-text-muted); text-align: center; font-weight: 500; }
-        .step.active .step-label { color: var(--bryson-text); }
-        .step.completed .step-label { color: var(--bryson-success); }
+        /* Steps Indicator */
+        .steps { display: flex; justify-content: space-between; margin-bottom: 16px; position: relative; }
+        .steps::before { content: ''; position: absolute; top: 15px; left: 0; right: 0; height: 2px; background: var(--bryson-card-border); z-index: 0; }
+        .step { display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 1; flex: 1; }
+        .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--bryson-card); border: 2px solid var(--bryson-card-border); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; transition: all 0.3s; }
+        .step.active .step-num { background: var(--bryson-gradient); border-color: var(--bryson-orange); color: white; box-shadow: 0 0 12px rgba(255, 107, 53, 0.4); }
+        .step.done .step-num { background: var(--bryson-success); border-color: var(--bryson-success); color: white; }
+        .step-label { font-size: 0.7rem; color: var(--bryson-text-muted); font-weight: 500; }
         
         /* Cards */
-        .card { 
-            background: var(--bryson-card); 
-            border: 1px solid var(--bryson-card-border); 
-            border-radius: 12px; 
-            padding: 16px; 
-            margin-bottom: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.3);
-        }
-        
-        .section { display: none; opacity: 0; transform: translateY(10px); transition: all 0.3s; }
-        .section.active { display: block; opacity: 1; transform: translateY(0); }
-        
-        h2 { font-size: 1.1rem; margin-bottom: 6px; font-weight: 700; }
-        .lead { color: var(--bryson-text-muted); margin-bottom: 12px; font-size: 0.85rem; }
+        .card { background: var(--bryson-card); border: 1px solid var(--bryson-card-border); border-radius: 14px; padding: 18px; margin-bottom: 12px; }
+        .card h2 { font-size: 1rem; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .card p { font-size: 0.8rem; color: var(--bryson-text-muted); margin-bottom: 12px; }
         
         /* Platform Grid */
-        .platform-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+        .platform-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
         .platform-card { 
             background: var(--bryson-darker); 
             border: 1px solid var(--bryson-card-border); 
             border-radius: 10px; 
             padding: 12px; 
-            display: flex; align-items: center; gap: 10px; 
-            cursor: pointer; transition: all 0.2s; 
+            display: flex; align-items: center; gap: 10px;
+            transition: all 0.2s;
+            min-height: 72px;
         }
-        .platform-card:hover { border-color: var(--bryson-orange); background: rgba(255, 107, 53, 0.08); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15); }
+        .platform-card:hover:not(.connected):not(.authenticating) { 
+            border-color: var(--bryson-orange); 
+            background: rgba(255, 107, 53, 0.08); 
+            transform: translateY(-1px); 
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15); 
+        }
         .platform-card.connected { border-color: var(--bryson-success); background: rgba(34, 197, 94, 0.08); }
         .platform-card.authenticating { border-color: var(--bryson-warning); background: rgba(245, 158, 11, 0.08); }
-        .platform-icon { font-size: 1.8rem; }
+        .platform-icon { font-size: 1.6rem; flex-shrink: 0; }
         .platform-info { flex: 1; min-width: 0; }
-        .platform-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .platform-status { font-size: 0.75rem; color: var(--bryson-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .platform-name { font-weight: 600; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .platform-status { font-size: 0.7rem; color: var(--bryson-text-muted); margin-top: 1px; }
         .platform-card.connected .platform-status { color: var(--bryson-success); }
         .platform-card.authenticating .platform-status { color: var(--bryson-warning); }
-        
-        /* Platform Actions */
-        .platform-actions { display: flex; flex-direction: column; gap: 6px; min-width: 120px; }
-        .platform-actions .btn { width: 100%; font-size: 0.75rem; padding: 8px 12px; }
         
         /* Buttons */
         .btn { padding: 10px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
@@ -168,47 +117,27 @@
         .checklist li.completed label { color: var(--bryson-success); text-decoration: line-through; opacity: 0.8; }
         
         /* Terminal */
-        .terminal { background: var(--bryson-darker); border: 1px solid var(--bryson-card-border); border-radius: 8px; padding: 14px; font-family: 'Consolas', 'Monaco', 'JetBrains Mono', monospace; font-size: 0.75rem; color: #e6edf3; max-height: 200px; overflow-y: auto; line-height: 1.6; }
+        .terminal { background: var(--bryson-darker); border: 1px solid var(--bryson-card-border); border-radius: 8px; padding: 14px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.7rem; color: #e6edf3; max-height: 180px; overflow-y: auto; line-height: 1.6; }
         .terminal-line { margin-bottom: 2px; opacity: 0; animation: fadeLine 0.3s forwards; }
         .terminal-line:nth-child(1) { animation-delay: 0ms; }
         .terminal-line:nth-child(2) { animation-delay: 150ms; }
         .terminal-line:nth-child(3) { animation-delay: 300ms; }
         .terminal-line:nth-child(4) { animation-delay: 450ms; }
         .terminal-line:nth-child(5) { animation-delay: 600ms; }
-        .terminal-line:nth-child(6) { animation-delay: 750ms; }
-        .terminal-line:nth-child(7) { animation-delay: 900ms; }
-        .terminal-line:nth-child(8) { animation-delay: 1050ms; }
-        .terminal-line:nth-child(9) { animation-delay: 1200ms; }
         @keyframes fadeLine { to { opacity: 1; } }
-        .terminal-prompt { color: var(--bryson-success); }
-        .terminal-command { color: var(--bryson-amber); }
-        .terminal-output { color: var(--bryson-text-muted); }
         
         /* Note Box */
         .note { background: rgba(45, 27, 78, 0.3); border: 1px solid rgba(45, 27, 78, 0.5); border-radius: 8px; padding: 10px; margin: 10px 0; font-size: 0.8rem; color: #c4b5fd; }
         .note strong { color: var(--bryson-amber); }
         
-        /* Secrets Grid */
-        .secrets-grid { display: grid; gap: 8px; }
-        .secret-card { background: var(--bryson-darker); padding: 12px; border-radius: 8px; border: 1px solid var(--bryson-card-border); }
-        .secret-card h4 { color: var(--bryson-orange); font-size: 0.85rem; margin-bottom: 4px; font-weight: 600; }
-        .secret-card p { font-size: 0.75rem; color: var(--bryson-text-muted); }
-        .secret-card a { color: var(--bryson-info); text-decoration: none; }
-        .secret-card a:hover { text-decoration: underline; }
-        
         /* Log Panel */
-        .log-panel { background: var(--bryson-darker); border-radius: 8px; padding: 10px; max-height: 140px; overflow-y: auto; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.7rem; line-height: 1.4; }
-        .log-entry { margin-bottom: 4px; padding: 6px 8px; border-radius: 4px; background: var(--bryson-card); border-left: 3px solid transparent; animation: slideIn 0.3s; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .log-panel { background: var(--bryson-darker); border-radius: 8px; padding: 10px; max-height: 120px; overflow-y: auto; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.68rem; line-height: 1.4; }
+        .log-entry { margin-bottom: 3px; padding: 4px 8px; border-radius: 4px; background: var(--bryson-card); border-left: 3px solid transparent; animation: slideIn 0.2s; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
         .log-entry.success { border-left-color: var(--bryson-success); }
         .log-entry.error { border-left-color: var(--bryson-error); }
         .log-entry.info { border-left-color: var(--bryson-info); }
         .log-entry.warning { border-left-color: var(--bryson-warning); }
-        .log-timestamp { color: var(--bryson-text-muted); font-size: 0.65rem; }
-        .log-message { color: var(--bryson-text); }
-        
-        .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .log-header h3 { font-size: 0.9rem; font-weight: 600; }
         
         /* Section spacing */
         .section { display: none; opacity: 0; transform: translateY(8px); transition: all 0.2s; }
@@ -219,416 +148,266 @@
             .container { padding: 12px 8px 16px; }
             .card { padding: 14px; }
             .platform-grid { grid-template-columns: 1fr; }
-            .steps::before { display: none; }
-            .step { max-width: none; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">BRYSON CLIPS ANIMATION</div>
-            <div class="subtitle">Viral Stickman Shorts Automation Setup</div>
+            <div class="logo">Bryson Clips Animation</div>
+            <div class="subtitle">Auto-Generate Viral Stickman Shorts · Free Forever</div>
         </div>
-
+        
+        <!-- Steps -->
         <div class="steps">
-            <div class="step active" id="step1-indicator">
-                <div class="step-number">1</div>
-                <div class="step-label">Connect Platforms</div>
-            </div>
-            <div class="step" id="step2-indicator">
-                <div class="step-number">2</div>
-                <div class="step-label">Verify</div>
-            </div>
-            <div class="step" id="step3-indicator">
-                <div class="step-number">3</div>
-                <div class="step-label">Deploy</div>
-            </div>
+            <div class="step active" id="step-indicator-1"><div class="step-num">1</div><div class="step-label">Connect Platforms</div></div>
+            <div class="step" id="step-indicator-2"><div class="step-num">2</div><div class="step-label">Verify & Deploy</div></div>
+            <div class="step" id="step-indicator-3"><div class="step-num">3</div><div class="step-label">Automation Live</div></div>
         </div>
-
+        
         <!-- Step 1: Connect Platforms -->
-        <div class="section active" id="step1">
+        <div class="section active" id="step-1">
             <div class="card">
-                <h2>Step 1: Connect Your Platforms</h2>
-                <p class="lead">Click each platform to authenticate. A browser window opens for login. Return here and click "Verify" to check connections.</p>
+                <h2><span style="color:var(--bryson-orange)">🔗</span> Step 1: Connect Your Channels</h2>
+                <p>Click <strong>Connect</strong> on each platform — it will open a browser. Sign in with your channel account, then click <strong>Connect</strong> again to save.</p>
                 
                 <div class="platform-grid" id="platform-grid"></div>
                 
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
                 
-                <div class="btn-group">
-                    <button class="btn btn-primary" id="verify-btn" onclick="verifyAllConnections()">Verify All Connections</button>
-                    <button class="btn btn-secondary" id="next-step1" onclick="goToStep(2)" style="display:none;">Next: Verify →</button>
+                <div class="btn-group" style="margin-top:14px">
+                    <button class="btn btn-primary" id="verify-btn" onclick="verifyAll()" style="display:none">✓ Verify All & Continue</button>
                 </div>
             </div>
         </div>
-
-        <!-- Step 2: Verify -->
-        <div class="section" id="step2">
+        
+        <!-- Step 2: Verification -->
+        <div class="section" id="step-2">
             <div class="card">
-                <h2>Step 2: Verify Connections</h2>
-                <p class="lead">All 7 platforms should show as connected. Click any unconnected platform to re-authenticate.</p>
-                
-                <div class="platform-grid" id="verify-grid"></div>
-                
-                <div class="btn-group">
-                    <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
-                    <button class="btn btn-primary" id="next-step2" onclick="goToStep(3)" style="display:none;">Next: Deploy →</button>
-                </div>
+                <h2><span style="color:var(--bryson-success)">✅</span> Step 2: Verification Complete</h2>
+                <ul class="checklist" id="verify-list"></ul>
             </div>
-        </div>
-
-        <!-- Step 3: Deploy -->
-        <div class="section" id="step3">
             <div class="card">
-                <h2>Step 3: Deploy to GitHub Actions</h2>
-                
-                <div class="note">
-                    <strong>Free forever:</strong> Runs 4×/day on GitHub Actions free tier. Zero monthly cost.
-                </div>
-                
-                <ul class="checklist" id="deploy-checklist">
-                    <li class="completed"><input type="checkbox" id="check-git" onchange="updateChecklist(this)" checked><label for="check-git">Git initialized and committed ✓</label></li>
-                    <li class="completed"><input type="checkbox" id="check-repo" onchange="updateChecklist(this)" checked><label for="check-repo">GitHub repository exists (brightbrio/BRYSON-CLIPS-ANIMATION) ✓</label></li>
-                    <li class="completed"><input type="checkbox" id="check-push" onchange="updateChecklist(this)" checked><label for="check-push">Code pushed to GitHub ✓</label></li>
-                    <li><input type="checkbox" id="check-secrets" onchange="updateChecklist(this)"><label for="check-secrets">Secrets added (GEMINI_API_KEY, YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, YOUTUBE_CHANNEL_ID, TIKTOK auth)</label></li>
-                    <li><input type="checkbox" id="check-workflow" onchange="updateChecklist(this)"><label for="check-workflow">Workflow running (check Actions tab)</label></li>
-                </ul>
-                
-                <div class="terminal" id="terminal">
-                    <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command"> git status</span></div>
-                    <div class="terminal-line"><span class="terminal-output">On branch main. Your branch is up to date with origin/main.</span></div>
-                    <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command"> git add .</span></div>
-                    <div class="terminal-line"><span class="terminal-output">Added all changes</span></div>
-                    <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command"> git commit -m "Update: YouTube + TikTok auth, HM Recaps + Hasahya Motivated"</span></div>
-                    <div class="terminal-line"><span class="terminal-output">Committed successfully</span></div>
-                    <div class="terminal-line"><span class="terminal-prompt">$</span> <span class="terminal-command"> git push origin main</span></div>
-                    <div class="terminal-line"><span class="terminal-output">Pushed to GitHub! Pipeline will run on next cron.</span></div>
-                </div>
-                
-                <div class="btn-group" style="margin-top: 20px;">
-                    <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
-                    <button class="btn btn-primary" onclick="openGitHub()">Open Existing GitHub Repository</button>
-                </div>
-            </div>
-            
-            <div class="card" style="margin-top: 20px;">
-                <h3 style="margin-bottom: 16px;">Required GitHub Secrets</h3>
-                <p style="color: var(--bryson-text-muted); margin-bottom: 16px;">Repo → Settings → Secrets and variables → Actions → New repository secret</p>
-                <div class="secrets-grid">
-                    <div class="secret-card">
-                        <h4>GLM_API_KEY</h4>
-                        <p>Get from <a href="https://z.ai" target="_blank">z.ai</a> (free tier available)</p>
-                    </div>
-                    <div class="secret-card">
-                        <h4>GEMINI_API_KEY</h4>
-                        <p>Get from <a href="https://aistudio.google.com" target="_blank">Google AI Studio</a> (free)</p>
-                    </div>
+                <h2><span style="color:var(--bryson-info)">🚀</span> Ready to Deploy</h2>
+                <p>Click Deploy to set up automated runs on GitHub Actions. Videos generate every 6 hours.</p>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="goBack()">← Back</button>
+                    <button class="btn btn-primary" onclick="deploy()" style="max-width:200px">🚀 Deploy Now</button>
                 </div>
             </div>
         </div>
-
-        <!-- Log Panel -->
-        <div class="card" style="margin-top: 20px;">
-            <div class="log-header">
-                <h3>Activity Log</h3>
-                <button class="btn btn-secondary" onclick="clearLog()" style="padding: 6px 12px; font-size: 0.75rem;">Clear</button>
+        
+        <!-- Step 3: Success -->
+        <div class="section" id="step-3">
+            <div class="card" style="text-align:center;padding:30px">
+                <div style="font-size:3rem;margin-bottom:12px">🎉</div>
+                <h2 style="color:var(--bryson-success)">Automation Is Live!</h2>
+                <p>Your system will now generate content automatically every 6 hours.<br>
+                First video will be ready within minutes after the next cron cycle.</p>
+                <div class="note"><strong>Note:</strong> Content generates in fallback/template mode. Add valid Gemini API key to use real LLM ideation.</div>
+            </div>
+        </div>
+        
+        <!-- Logs -->
+        <div class="card" style="padding:12px">
+            <div class="log-header" style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <h3 style="font-size:0.8rem">Activity Log</h3>
+                <button class="btn btn-secondary" style="padding:4px 10px;font-size:0.68rem" onclick="clearLogs()">Clear</button>
             </div>
             <div class="log-panel" id="log-panel"></div>
         </div>
     </div>
 
     <script>
-        // Platform configuration
         const PLATFORMS = [
-            { id: "youtube", name: "YouTube Studio", url: "https://studio.youtube.com", icon: "📺" },
-            { id: "tiktok", name: "TikTok", url: "https://www.tiktok.com/login", icon: "🎵" },
-            { id: "facebook", name: "Facebook Business Suite", url: "https://business.facebook.com", icon: "📘" },
-            { id: "instagram", name: "Instagram", url: "https://www.instagram.com/accounts/login/", icon: "📸" },
-            { id: "google_flow", name: "Google Flow (Veo)", url: "https://flow.google.com", icon: "🎬" },
-            { id: "google_ai_studio", name: "Google AI Studio", url: "https://aistudio.google.com", icon: "🤖" },
-            { id: "capcut", name: "CapCut Web", url: "https://www.capcut.com/editor", icon: "✂️" },
+            { id: "youtube",   name: "YouTube Studio",     url: "https://studio.youtube.com",       icon: "📺" },
+            { id: "tiktok",    name: "TikTok",             url: "https://www.tiktok.com/login",      icon: "🎵" },
+            { id: "facebook",  name: "Facebook Business",  url: "https://business.facebook.com",     icon: "📘" },
+            { id: "instagram", name: "Instagram",          url: "https://www.instagram.com/accounts/login/", icon: "📸" },
+            { id: "google_flow", name: "Google Flow",      url: "https://flow.google.com",           icon: "🎬" },
+            { id: "capcut",    name: "CapCut Web",         url: "https://www.capcut.com/editor",     icon: "✂️" },
         ];
 
-        let currentStep = 1;
-        const authStates = {};
+        // Track state per platform
+        const platformState = {}; // pid -> {status:'pending'|'authenticating'|'connected', label:'', saving:false}
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOMContentLoaded fired');
-            const grid = document.getElementById('platform-grid');
-            console.log('platform-grid element:', grid);
-            if (!grid) {
-                console.error('FATAL: platform-grid element NOT FOUND in DOM!');
-                // Try to find it
-                const allDivs = document.querySelectorAll('div[id*="platform"]');
-                console.log('All platform-related divs:', allDivs);
-            }
-            renderPlatforms();
             loadAuthStates();
-            log('info', 'Welcome to Bryson Clips Animation Setup Wizard!');
-            log('info', 'Step 1: Click each platform to authenticate in your browser');
+            renderPlatforms();
+            pollForAuth();
+            log('info', 'Welcome! Click Connect to sign in each channel.');
         });
-
-        function renderPlatforms() {
-            console.log('renderPlatforms called');
-            const grid = document.getElementById('platform-grid');
-            console.log('grid element:', grid);
-            if (!grid) {
-                console.error('platform-grid element NOT FOUND!');
-                return;
-            }
-            const html = PLATFORMS.map(p => `
-                <div class="platform-card" id="platform-${p.id}">
-                    <div class="platform-icon">${p.icon}</div>
-                    <div class="platform-info">
-                        <div class="platform-name">${p.name}</div>
-                        <div class="platform-status" id="status-${p.id}">Click Connect to start</div>
-                    </div>
-                    <div class="platform-actions">
-                        <button class="btn btn-primary" id="connect-${p.id}" onclick="authenticatePlatform('${p.id}')">Connect</button>
-                        <button class="btn btn-secondary save-auth-btn" id="save-${p.id}" onclick="saveAuth('${p.id}')" style="display:none;">Save Auth</button>
-                    </div>
-                </div>
-            `).join('');
-            console.log('Setting innerHTML:', html.length, 'chars');
-            grid.innerHTML = html;
-            console.log('innerHTML set. grid.innerHTML length:', grid.innerHTML.length);
-            console.log('grid children:', grid.children.length);
-        }
 
         function loadAuthStates() {
             PLATFORMS.forEach(p => {
-                const saved = localStorage.getItem(`auth_${p.id}`);
-                if (saved) {
-                    authStates[p.id] = JSON.parse(saved);
-                    updatePlatformUI(p.id, 'connected');
+                try {
+                    const s = localStorage.getItem(`bca_${p.id}`);
+                    if (s) platformState[p.id] = JSON.parse(s);
+                } catch(e) {}
+            });
+        }
+
+        function saveState(pid, state) {
+            platformState[pid] = state;
+            localStorage.setItem(`bca_${pid}`, JSON.stringify(state));
+        }
+
+        async function fetchStatus() {
+            try {
+                const r = await fetch('/api/status');
+                return await r.json();
+            } catch(e) { return []; }
+        }
+
+        function syncFromServer(states) {
+            states.forEach(s => {
+                if (s.status !== platformState[s.platform_id]?.status) {
+                    platformState[s.platform_id] = { status: s.status };
                 }
             });
+            renderPlatforms();
             updateProgress();
         }
 
-        function updatePlatformUI(platformId, status) {
-            const card = document.getElementById(`platform-${platformId}`);
-            const statusEl = document.getElementById(`status-${platformId}`);
-            const connectBtn = document.getElementById(`connect-${platformId}`);
-            const saveBtn = document.getElementById(`save-${platformId}`);
-            if (!card || !statusEl) return;
-            
-            card.classList.remove('connected', 'authenticating', 'error');
-            if (status === 'connected') {
-                card.classList.add('connected');
-                statusEl.textContent = 'Connected ✓';
-                if (connectBtn) connectBtn.style.display = 'none';
-                if (saveBtn) saveBtn.style.display = 'none';
-            } else if (status === 'authenticating') {
-                card.classList.add('authenticating');
-                statusEl.textContent = 'Opening browser...';
-                if (connectBtn) connectBtn.style.display = 'none';
-                if (saveBtn) saveBtn.style.display = 'block';
-            } else if (status === 'error') {
-                card.classList.add('error');
-                statusEl.textContent = 'Failed - click Connect to retry';
-                if (connectBtn) connectBtn.style.display = 'block';
-                if (saveBtn) saveBtn.style.display = 'none';
-            } else {
-                // default state
-                if (connectBtn) connectBtn.style.display = 'block';
-                if (saveBtn) saveBtn.style.display = 'none';
+        function renderPlatforms() {
+            const grid = document.getElementById('platform-grid');
+            if (!grid) return;
+            grid.innerHTML = PLATFORMS.map(p => {
+                const st = platformState[p.id] || { status: 'pending' };
+                const isConn = st.status === 'connected';
+                const isAuth = st.status === 'authenticating';
+                const btnClass = isConn ? 'btn-secondary' : 'btn-primary';
+                const btnText = isConn ? '✓ Connected' : (isAuth ? '⏳ Signing in…' : 'Connect');
+                const cardClass = isConn ? 'connected' : (isAuth ? 'authenticating' : '');
+                const statusText = isConn ? 'Authenticated ✓' : (isAuth ? 'Open browser & sign in' : 'Click Connect to start');
+                const onclick = isConn ? '' : `onclick="connectPlatform('${p.id}')"`;
+                return `<div class="platform-card ${cardClass}" id="card-${p.id}">
+                    <div class="platform-icon">${p.icon}</div>
+                    <div class="platform-info">
+                        <div class="platform-name">${p.name}</div>
+                        <div class="platform-status" id="status-${p.id}">${statusText}</div>
+                    </div>
+                    <button class="btn ${btnClass}" ${onclick} id="btn-${p.id}">${btnText}</button>
+                </div>`;
+            }).join('');
+            updateProgress();
+        }
+
+        async function connectPlatform(pid) {
+            const st = platformState[p.id] || {};
+            if (st.status === 'pending') {
+                // First click: open browser
+                saveState(pid, { status: 'authenticating' });
+                renderPlatforms();
+                log('info', `Opening ${PLATFORMS.find(p=>p.id===pid).name}… Sign in, then click Done.`);
+                try { await fetch('/api/auth/start', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({platform: pid}) }); } catch(e) {}
+            } else if (st.status === 'authenticating') {
+                // Second click: save auth (user signed in already)
+                log('info', `Saving ${PLATFORMS.find(p=>p.id===pid).name} auth…`);
+                saveState(pid, { status: 'connecting' });
+                renderPlatforms();
+                try {
+                    const r = await fetch('/api/auth/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({platform: pid}) });
+                    const d = await r.json();
+                    if (d.success) {
+                        log('success', `${PLATFORMS.find(p=>p.id===pid).name} saved ✓`);
+                        saveState(pid, { status: 'connected' });
+                        renderPlatforms();
+                        updateProgress();
+                        updateVerifyBtn();
+                    } else {
+                        log('error', 'Save failed');
+                        saveState(pid, { status: 'authenticating' });
+                        renderPlatforms();
+                    }
+                } catch(e) {
+                    log('error', 'Network error');
+                    saveState(pid, { status: 'authenticating' });
+                }
             }
         }
 
-        async function authenticatePlatform(platformId) {
-            const platform = PLATFORMS.find(p => p.id === platformId);
-            if (!platform) return;
-            
-            updatePlatformUI(platformId, 'authenticating');
-            log('info', `Opening ${platform.name} in new tab...`);
-            
-            // Open in current browser (new tab) - this uses YOUR logged-in session
-            const authTab = window.open(platform.url, '_blank', 'noopener,noreferrer');
-            
-            // Always try to start the automation browser - this is the actual session saver
-            let automationStarted = false;
-            try {
-                const response = await fetch('/api/auth/start', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ platform: platformId })
-                });
-                const data = await response.json();
-                
-                if (data.session_id) {
-                    window.currentAuthSession = { platform: platformId, session_id: data.session_id };
-                    automationStarted = true;
-                }
-            } catch (err) {
-                log('error', `Automation browser failed: ${err}`);
+        async function verifyAll() {
+            const states = await fetchStatus();
+            syncFromServer(states);
+            const results = [];
+            for (const p of PLATFORMS) {
+                const ok = (platformState[p.id] || {}).status === 'connected';
+                results.push(ok);
+                log(ok ? 'success' : 'error', `${p.icon} ${p.name}: ${ok ? 'Verified ✓' : 'Pending'}`);
             }
-            
-            if (authTab) {
-                log('info', `${platform.name} opened in new tab. Log in there (HM Recaps / Hasahya Motivated), then return here and click "Save Auth".`);
-                if (!automationStarted) {
-                    log('warning', 'Automation browser also started in background for session saving.');
-                }
+            if (results.every(Boolean)) {
+                log('success', 'All platforms verified! Moving to Step 2…');
+                setTimeout(() => goToStep(2), 600);
             } else {
-                log('warning', 'Popup blocked - but automation browser is running. Log in there, then click "Save Auth".');
-            }
-            
-            // Keep Save Auth button visible if automation browser started (regardless of popup)
-            if (automationStarted) {
-                // Override the 'authenticating' state to keep Save Auth visible
-                const saveBtn = document.getElementById(`save-${platformId}`);
-                if (saveBtn) saveBtn.style.display = 'block';
-            } else {
-                updatePlatformUI(platformId, 'error');
+                log('warning', 'Some platforms still pending. Please finish connecting first.');
             }
         }
-        
-        async function saveAuth(platformId) {
-            log('info', `Saving auth for ${platformId}...`);
-            try {
-                const response = await fetch('/api/auth/save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ platform: platformId })
-                });
-                const data = await response.json();
-                
-                if (data.success) {
-                    log('success', `${PLATFORMS.find(p => p.id === platformId).name} auth saved!`);
-                    updatePlatformUI(platformId, 'connected');
-                    
-                    // Remove Save Auth button
-                    const card = document.getElementById(`platform-${platformId}`);
-                    const saveBtn = card?.querySelector('.save-auth-btn');
-                    if (saveBtn) saveBtn.remove();
-                    
-                    updateProgress();
-                    updateVerifyBtn();
-                    window.currentAuthSession = null;
-                } else {
-                    log('error', `Failed to save auth: ${data.message}`);
-                }
-            } catch (err) {
-                log('error', `Save auth failed: ${err}`);
+
+        function goBack() {
+            goToStep(1);
+        }
+
+        function goToStep(n) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step-${n}`).classList.add('active');
+            
+            document.querySelectorAll('.step').forEach((el, i) => {
+                el.classList.remove('active', 'done');
+                if (i + 1 < n) el.classList.add('done');
+                if (i + 1 === n) el.classList.add('active');
+            });
+            
+            if (n === 2) {
+                const list = document.getElementById('verify-list');
+                list.innerHTML = PLATFORMS.map(p => {
+                    const ok = (platformState[p.id] || {}).status === 'connected';
+                    return `<li class="${ok ? 'completed' : ''}"><input type="checkbox" ${ok ? 'checked disabled' : ''}><label>${p.icon} ${p.name} — ${ok ? 'Authenticated ✓' : 'Pending'}</label></li>`;
+                }).join('');
             }
+        }
+
+        async function deploy() {
+            log('info', 'Deploying to GitHub Actions…');
+            window.open('https://github.com/brightbrio/BRYSON-CLIPS-ANIMATION/actions', '_blank');
+            log('success', 'Check your repo actions — automation will run every 6 hours!');
+            setTimeout(() => goToStep(3), 1000);
         }
 
         function updateProgress() {
-            const connected = Object.keys(authStates).filter(id => authStates[id].status === 'success').length;
-            const percent = (connected / PLATFORMS.length) * 100;
-            document.getElementById('progress-fill').style.width = percent + '%';
+            const total = PLATFORMS.length;
+            const connected = Object.values(platformState).filter(s => s.status === 'connected').length;
+            const pct = (connected / total) * 100;
+            document.getElementById('progress-fill').style.width = pct + '%';
         }
 
         function updateVerifyBtn() {
-            const connected = Object.keys(authStates).filter(id => authStates[id].status === 'success').length;
+            const allConnected = PLATFORMS.every(p => (platformState[p.id] || {}).status === 'connected');
             const btn = document.getElementById('verify-btn');
-            const nextBtn = document.getElementById('next-step1');
-            
-            btn.textContent = `Verify All (${connected}/${PLATFORMS.length} connected)`;
-            
-            if (connected === PLATFORMS.length) {
-                nextBtn.style.display = 'inline-flex';
-            }
+            if (btn) btn.style.display = allConnected ? 'inline-flex' : 'none';
         }
 
-        async function verifyAllConnections() {
-            log('info', 'Verifying all platform connections...');
-            
-            // Load auth states from localStorage into authStates object
-            PLATFORMS.forEach(p => {
-                const saved = localStorage.getItem(`auth_${p.id}`);
-                if (saved) {
-                    authStates[p.id] = JSON.parse(saved);
-                }
-            });
-            
-            for (const platform of PLATFORMS) {
-                const state = authStates[platform.id];
-                if (state && state.status === 'success') {
-                    log('success', `${platform.name}: Verified ✓`);
-                } else {
-                    log('error', `${platform.name}: Not connected`);
-                }
-            }
-            
-            updateVerifyBtn();
-            
-            const connected = Object.keys(authStates).filter(id => authStates[id].status === 'success').length;
-            if (connected === PLATFORMS.length) {
-                log('success', 'All platforms verified! Ready for Step 2.');
-                document.getElementById('next-step1').style.display = 'inline-flex';
-            }
-        }
-
-        function renderVerification() {
-            const grid = document.getElementById('verify-grid');
-            grid.innerHTML = PLATFORMS.map(p => {
-                const state = authStates[p.id];
-                const isConnected = state && state.status === 'success';
-                return `
-                    <div class="platform-card ${isConnected ? 'connected' : 'error'}" onclick="authenticatePlatform('${p.id}')">
-                        <div class="platform-icon">${p.icon}</div>
-                        <div class="platform-info">
-                            <div class="platform-name">${p.name}</div>
-                            <div class="platform-status">
-                                ${isConnected ? 'Verified ✓' : 'Not connected - click to authenticate'}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            const allConnected = PLATFORMS.every(p => authStates[p.id]?.status === 'success');
-            document.getElementById('next-step2').style.display = allConnected ? 'inline-flex' : 'none';
-        }
-
-        function goToStep(step) {
-            currentStep = step;
-            
-            // Update step indicators
-            [1,2,3].forEach(s => {
-                const el = document.getElementById(`step${s}-indicator`);
-                if (s < step) el.classList.add('completed');
-                else el.classList.remove('completed');
-                el.classList.toggle('active', s === step);
-            });
-            
-            // Show/hide sections
-            [1,2,3].forEach(s => {
-                document.getElementById(`step${s}`).classList.toggle('active', s === step);
-            });
-            
-            if (step === 2) renderVerification();
-        }
-
-        function openGitHub() {
-            window.open('https://github.com/brightbrio/BRYSON-CLIPS-ANIMATION', '_blank');
-            log('info', 'Opening existing GitHub repository...');
-        }
-
-        function updateChecklist(cb) {
-            const li = cb.closest('li');
-            li.classList.toggle('completed', cb.checked);
-            
-            const checked = document.querySelectorAll('#deploy-checklist input:checked').length;
-            if (checked === 5) {
-                log('success', 'All deployment steps complete! Your automation is live.');
-            }
+        async function pollForAuth() {
+            setInterval(async () => {
+                try {
+                    const states = await fetchStatus();
+                    syncFromServer(states);
+                } catch(e) {}
+            }, 3000);
         }
 
         function log(type, message) {
             const panel = document.getElementById('log-panel');
-            const time = new Date().toLocaleTimeString();
+            if (!panel) return;
             const entry = document.createElement('div');
             entry.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
             entry.innerHTML = `<span class="log-timestamp">[${time}]</span> <span class="log-message">${message}</span>`;
             panel.appendChild(entry);
             panel.scrollTop = panel.scrollHeight;
         }
 
-        function clearLog() {
+        function clearLogs() {
             document.getElementById('log-panel').innerHTML = '';
         }
     </script>
