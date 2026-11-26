@@ -176,8 +176,12 @@
                 <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
                 
                 <div class="btn-group" style="margin-top:14px">
-                    <button class="btn btn-primary" id="verify-btn" onclick="verifyAll()" style="display:none">✓ Verify All & Continue</button>
+                    <button class="btn btn-primary" onclick="postNow()">🚀 Post Video Now</button>
+                    <button class="btn btn-primary" id="verify-btn" onclick="verifyAll()" style="display:none">✓ Verify All &amp; Continue</button>
                 </div>
+                <p style="font-size:0.72rem;color:var(--bryson-text-muted);margin-top:10px">
+                    How it works: click <strong>Connect</strong> on YouTube &amp; TikTok → they open in your Chrome → sign in there → click <strong>Post Video Now</strong>. That's it.
+                </p>
             </div>
         </div>
         
@@ -294,37 +298,28 @@
         }
 
         async function connectPlatform(pid) {
-            const st = platformState[p.id] || {};
-            if (st.status === 'pending') {
-                // First click: open browser
-                saveState(pid, { status: 'authenticating' });
-                renderPlatforms();
-                log('info', `Opening ${PLATFORMS.find(p=>p.id===pid).name}… Sign in, then click Done.`);
-                try { await fetch('/api/auth/start', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({platform: pid}) }); } catch(e) {}
-            } else if (st.status === 'authenticating') {
-                // Second click: save auth (user signed in already)
-                log('info', `Saving ${PLATFORMS.find(p=>p.id===pid).name} auth…`);
-                saveState(pid, { status: 'connecting' });
-                renderPlatforms();
-                try {
-                    const r = await fetch('/api/auth/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({platform: pid}) });
-                    const d = await r.json();
-                    if (d.success) {
-                        log('success', `${PLATFORMS.find(p=>p.id===pid).name} saved ✓`);
-                        saveState(pid, { status: 'connected' });
-                        renderPlatforms();
-                        updateProgress();
-                        updateVerifyBtn();
-                    } else {
-                        log('error', 'Save failed');
-                        saveState(pid, { status: 'authenticating' });
-                        renderPlatforms();
-                    }
-                } catch(e) {
-                    log('error', 'Network error');
-                    saveState(pid, { status: 'authenticating' });
+            const p = PLATFORMS.find(x => x.id === pid);
+            log('info', 'Opening '+p.name+' in your Chrome...');
+            try {
+                await fetch('/api/launch', { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' });
+                const r = await fetch('/api/open', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({platform: pid}) });
+                const d = await r.json();
+                if (d.ok) {
+                    saveState(pid, { status:'authenticating' });
+                    renderPlatforms();
+                    log('success', p.name+': open in Chrome. Sign in there, then hit Post Video Now.');
+                } else {
+                    log('error', p.name+': '+(d.error||'could not open'));
                 }
-            }
+            } catch(e) { log('error', 'Could not reach server: '+e); }
+        }
+
+        async function postNow() {
+            log('info', 'Starting full cycle: generate + post to YouTube & TikTok...');
+            try {
+                await fetch('/api/run', { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' });
+                log('success', 'Run started in the background. Watch Chrome post the video.');
+            } catch(e) { log('error', 'Run failed to start: '+e); }
         }
 
         async function verifyAll() {

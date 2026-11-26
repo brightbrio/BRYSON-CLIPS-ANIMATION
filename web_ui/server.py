@@ -2,11 +2,14 @@
 Bryson Clips Animation — Auth Server (Single-button Connect flow)
 Click Connect → browser opens → user signs in → click Done → saved to auth/ folder
 """
-import os, json, threading, uuid, time, mimetypes
+import os, json, threading, uuid, time, mimetypes, subprocess, sys
 from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import webbrowser
 
+import browser_ctl
+
+ROOT = Path(__file__).parent.parent
 STATE_DIR = Path(__file__).parent / "../state/auth"
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -110,8 +113,38 @@ class Handler(BaseHTTPRequestHandler):
             sessions.pop(pid, None)
             self._json({"cancelled": True})
 
+        elif self.path == "/api/launch":
+            # Ensure the user's Hasahya Chrome is running with the CDP port.
+            res = browser_ctl.ensure_chrome()
+            self._json(res)
+
+        elif self.path == "/api/open":
+            pid = body.get("platform", "")
+            res = browser_ctl.open_platform(pid)
+            self._json(res)
+
+        elif self.path == "/api/run":
+            # Kick off one full local cycle (generate + post) in the background.
+            if not getattr(self, "_run_started", False):
+                threading.Thread(target=self._run_cycle, daemon=True).start()
+                self._run_started = True
+            self._json({"status": "running"})
+
         else:
             self._json({"error": "not found"}, 404)
+
+    def _run_cycle(self):
+        env = dict(os.environ)
+        env["USE_FALLBACK"] = "false"
+        try:
+            subprocess.Popen(
+                [sys.executable, "run_local.py"],
+                cwd=str(ROOT), env=env,
+                stdout=open(ROOT / "local_run.log", "a"),
+                stderr=subprocess.STDOUT,
+            )
+        except Exception:
+            pass
 
 
 def open_browser():
