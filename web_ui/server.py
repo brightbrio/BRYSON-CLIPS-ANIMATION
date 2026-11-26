@@ -2,13 +2,15 @@
 Bryson Clips Animation — Auth Server (Single-button Connect flow)
 Click Connect → browser opens → user signs in → click Done → saved to auth/ folder
 """
-import os, json, threading, uuid, time
+import os, json, threading, uuid, time, mimetypes
 from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import webbrowser
 
 STATE_DIR = Path(__file__).parent / "../state/auth"
 STATE_DIR.mkdir(parents=True, exist_ok=True)
+
+WEB_DIR = Path(__file__).parent
 
 PLATFORMS = {
     "youtube":   {"url": "https://studio.youtube.com",         "name": "YouTube Studio",     "icon": "📺"},
@@ -19,11 +21,20 @@ PLATFORMS = {
     "capcut":    {"url": "https://www.capcut.com/editor",       "name": "CapCut Web",         "icon": "✂️"},
 }
 
-# Active sessions: pid -> {status, started_at, session_id}
+# Active sessions: pid -> {session_id, started_at, status}
 sessions = {}
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args): pass
+
+    def _json(self, data, status=200):
+        raw = json.dumps(data).encode()
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Content-Length", str(len(raw)))
+        self.end_headers()
+        self.wfile.write(raw)
 
     def do_GET(self):
         if self.path == "/api/status":
@@ -42,12 +53,32 @@ class Handler(BaseHTTPRequestHandler):
             self._json({"status": "ok"})
         else:
             # Serve static files from web_ui/
-            super().do_GET()
+            rel = self.path.lstrip("/")
+            if not rel or rel == "index.html":
+                rel = "index.html"
+            fpath = (WEB_DIR / rel).resolve()
+            if not str(fpath).startswith(str(WEB_DIR.resolve())):
+                self._json({"error": "forbidden"}, 403); return
+            if not fpath.exists() or not fpath.is_file():
+                self._json({"error": "not found"}, 404); return
+            content_type, _ = mimetypes.guess_type(str(fpath))
+            if content_type is None:
+                content_type = "application/octet-stream"
+            data = fpath.read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
 
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
-        body = json.loads(self.rfile.read(length)) if length else {}
-        
+        raw_body = self.rfile.read(length) if length else b""
+        try:
+            body = json.loads(raw_body) if raw_body else {}
+        except Exception:
+            body = {}
+
         if self.path == "/api/auth/start":
             pid = body.get("platform", "")
             if pid not in PLATFORMS:
@@ -57,7 +88,7 @@ class Handler(BaseHTTPRequestHandler):
             sid = str(uuid.uuid4())[:8]
             sessions[pid] = {"session_id": sid, "started": time.time(), "status": "authenticating"}
             self._json({"status": "opened", "session_id": sid})
-            
+
         elif self.path == "/api/auth/save":
             pid = body.get("platform", "")
             if pid not in PLATFORMS:
@@ -73,23 +104,14 @@ class Handler(BaseHTTPRequestHandler):
             if pid in sessions:
                 sessions[pid]["status"] = "connected"
             self._json({"success": True, "path": str(auth_file)})
-            
+
         elif self.path == "/api/auth/cancel":
             pid = body.get("platform", "")
             sessions.pop(pid, None)
             self._json({"cancelled": True})
-            
+
         else:
             self._json({"error": "not found"}, 404)
-
-    def _json(self, data, status=200):
-        raw = json.dumps(data).encode()
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Content-Length", str(len(raw)))
-        self.end_headers()
-        self.wfile.write(raw)
 
 
 def open_browser():

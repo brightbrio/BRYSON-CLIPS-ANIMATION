@@ -22,14 +22,14 @@ orchestrator:
   retry_delay_minutes: 15
 
 ideation:
-  model: "glm-4.5-flash"  # Free via Z.ai / GLM
+  model: "gemini-flash-latest"  # Use Gemini free tier
   ideas_per_batch: 10
   min_novelty_score: 7
   max_historical_age_years: 5000
   fact_check_enabled: true
   story_structure: "hook_escalate_prop_obstacle_payoff_twist"
   narration_wps: 3.8  # words per second
-  backend: "ollama"  # Use local Ollama or fallback to template
+  backend: "gemini"  # Use Gemini REST API with GEMINI_API_KEY
   ollama:
     host: "http://localhost:11434"
     model: "llama3.2:latest"  # Lightweight model for free tier

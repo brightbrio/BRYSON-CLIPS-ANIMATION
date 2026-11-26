@@ -120,9 +120,10 @@ Output ONLY numbered list 1-10.
         if not api_key:
             return self._fallback_ideas()
         import time as _time
-        clean_key = api_key.replace("AQ.", "")
+        # The full key works against the REST API — do NOT strip anything
+        clean_key = api_key
         # Try multiple models in order of availability
-        models = ["gemini-3.1-pro-preview", "gemini-3-flash-preview", "gemini-2.5-flash"]
+        models = ["gemini-flash-latest", "gemini-3.1-pro-preview", "gemini-3-flash-preview", "gemini-2.5-flash"]
         for model in models:
             for attempt in range(2):
                 try:
