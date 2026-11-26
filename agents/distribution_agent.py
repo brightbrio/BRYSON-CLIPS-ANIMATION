@@ -138,6 +138,17 @@ class DistributionAgent:
         self.current_video_id = metadata["video_id"]
         self.current_prop = metadata["prop"]
         
+        # Guard: if no browser pages are set up (e.g. CI without Playwright or
+        # missing auth state), skip posting gracefully instead of crashing.
+        if not self.pages:
+            logger.warning(
+                "No browser pages available (Playwright not installed or no auth "
+                "state). Skipping distribution to %s. Run locally with real auth "
+                "to post to HM Recaps / Hasahya Motivated.",
+                ", ".join(self.enabled_platforms),
+            )
+            return
+        
         logger.info(f"Posting video {self.current_video_id} to {len(self.enabled_platforms)} platforms...")
         
         tasks = []
@@ -288,6 +299,9 @@ class DistributionAgent:
     
     async def _engage_platform(self, platform: str):
         """Reply to comments on recent videos for one platform."""
+        if not self.pages:
+            logger.warning("No browser pages available; skipping engagement for %s.", platform)
+            return
         page = self.pages[platform]
         
         # Get recent video IDs from DB (last 24h)
