@@ -22,15 +22,17 @@ os.chdir(Path(__file__).parent)
 os.environ["USE_FALLBACK"] = "false"
 
 # Your Gemini key lives in local .env or as a shell env var (NEVER committed).
-# Load it if present; otherwise ideation still works via the free template fallback.
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass
+# A local .env always wins over any OS env var so the known-good key is used.
+_env_file = Path(__file__).parent / ".env"
+if _env_file.exists():
+    for line in _env_file.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, _, v = line.partition("=")
+            os.environ[k.strip()] = v.strip()
 if not os.environ.get("GEMINI_API_KEY"):
     print("[note] GEMINI_API_KEY not set — using free template ideation. "
-          "Set it in a local .env file to use Gemini.")
+          "Put it in a local .env file to use Gemini.")
 
 from orchestrator import Orchestrator
 

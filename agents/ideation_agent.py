@@ -123,7 +123,7 @@ Output ONLY numbered list 1-10.
         # The full key works against the REST API — do NOT strip anything
         clean_key = api_key
         # Try multiple models in order of availability
-        models = ["gemini-flash-latest", "gemini-3.1-pro-preview", "gemini-3-flash-preview", "gemini-2.5-flash"]
+        models = ["gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.1-pro-preview", "gemini-3-flash-preview", "gemini-2.5-flash"]
         for model in models:
             for attempt in range(2):
                 try:
