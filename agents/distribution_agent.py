@@ -10,6 +10,7 @@ import asyncio
 import logging
 import json
 import os
+import time
 import sqlite3
 import random
 from pathlib import Path
@@ -247,6 +248,42 @@ class DistributionAgent:
         # Schedule engagement
         await self._schedule_engagement()
     
+    async def _ensure_logged_in(self, page, platform: str, timeout_s: int = 300):
+        """If the upload page is actually a sign-in wall, wait for the user to log
+        in in the visible browser (once). YouTube/Google walls live on
+        accounts.google.com or youtube.com/signin; TikTok on /login."""
+        wall_markers = {
+            "youtube": ["accounts.google.com", "youtube.com/signin", "/signin", "/v3/signin"],
+            "tiktok": ["/login", "login.tiktok", "verify"],
+            "facebook": ["facebook.com/login", "check点对", "/checkpoint"],
+            "instagram": ["instagram.com/accounts/login", "login"],
+        }
+        markers = wall_markers.get(platform, [])
+        if not markers:
+            return
+        try:
+            url = (page.url or "").lower()
+        except Exception:
+            return
+        if not any(m.lower() in url for m in markers):
+            return  # not on a sign-in wall — already logged in
+        print(f"\n[LOGIN] {platform}: not signed in yet. Please log in to "
+              f"{platform} in the open browser window now...")
+        logger.warning(f"[{platform}] sign-in wall detected — waiting up to "
+                       f"{timeout_s}s for you to log in in the browser window.")
+        end = time.time() + timeout_s
+        while time.time() < end:
+            try:
+                await page.wait_for_timeout(3000)
+                url = (page.url or "").lower()
+                if not any(m.lower() in url for m in markers):
+                    print(f"[LOGIN] {platform}: signed in, continuing.")
+                    await page.wait_for_load_state("networkidle")
+                    return
+            except Exception:
+                break
+        logger.warning(f"[{platform}] still not signed in after waiting; skipping upload.")
+
     async def _live_page(self, platform: str):
         """Return a usable page for `platform`. If the live/CDP page was closed,
         recreate it in the shared context so the flow can continue."""
@@ -276,7 +313,11 @@ class DistributionAgent:
         # Navigate to upload page
         await page.goto(config.get("upload_url", config["url"]))
         await page.wait_for_load_state("networkidle")
-        
+
+        # If a sign-in wall appears, pause so the user can log in in the visible
+        # browser once — then the session persists and future runs are automatic.
+        await self._ensure_logged_in(page, platform)
+
         # Platform-specific prep
         if platform == "facebook":
             # Switch to Reels tab
