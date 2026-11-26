@@ -131,6 +131,13 @@ class DistributionAgent:
                     page.set_default_timeout(120000)
                     self.contexts[platform] = ctx
                     self.pages[platform] = page
+                    # Navigate immediately so the tab isn't a blank about:blank.
+                    base = self.PLATFORMS.get(platform, {}).get("url", "")
+                    if base:
+                        try:
+                            await page.goto(base, timeout=30000, wait_until="domcontentloaded")
+                        except Exception:
+                            pass
                 logger.info(f"[cdp] Ready for: {', '.join(self.pages.keys())}")
                 return
             except Exception as e:

@@ -46,3 +46,8 @@ _story.json
 check_rick.py
 init_db*.py
 run_local_local.env
+
+# dedicated automation browser profile (local only, has locked cookie files)
+chrome_profile/
+local_run.log
+*.log

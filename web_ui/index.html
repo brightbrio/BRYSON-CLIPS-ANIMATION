@@ -101,7 +101,12 @@
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .btn-secondary { background: var(--bryson-card); color: var(--bryson-text); border: 1px solid var(--bryson-card-border); }
         .btn-secondary:hover { border-color: var(--bryson-orange); background: rgba(255, 107, 53, 0.1); }
-        .btn-group { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+        .btn-group { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+        .btn-group .btn { width: auto; }
+        /* Platform card buttons: auto width, never overlap the icon/name */
+        .platform-card { flex-wrap: wrap; row-gap: 8px; }
+        .platform-card .btn { width: auto; padding: 8px 16px; font-size: 0.8rem; flex-shrink: 0; align-self: center; }
+        .platform-card .btn-primary { width: auto; }
         
         /* Progress Bar */
         .progress-bar { height: 3px; background: var(--bryson-card-border); border-radius: 2px; overflow: hidden; margin-top: 10px; }

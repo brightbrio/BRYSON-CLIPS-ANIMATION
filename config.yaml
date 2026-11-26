@@ -129,16 +129,14 @@ production:
     twist_frame: 1740  # 58s twist question
 
 distribution:
-  # CDP attach to a live Chrome (kept available, disabled by default — live
-  # user Chrome is flaky for automation).
+  # CDP attach to your LIVE Hasahya Chrome (the one you sign into via the UI).
+  # This is the ONLY browser used for posting now — no separate window.
   cdp:
     enabled: true
     endpoint: "http://127.0.0.1:9222"
-  # DEDICATED automation browser (isolated from your daily Chrome). Sign in to
-  # YouTube + TikTok ONCE with:   python one_time_login.py
-  # After that, every run reuses those logins automatically and posts for you.
+  # Dedicated browser is DISABLED so we never open a second, blank browser.
   chrome_profile:
-    enabled: true
+    enabled: false
     headless: false
     channel: "chrome"
     user_data_dir: "C:\\Users\\Administrator\\bryson-clips-animation\\chrome_profile"
@@ -155,12 +153,12 @@ distribution:
       max_daily: 4
       hashtags: ["#history", "#facts", "#animation", "#learnontiktok"]
     facebook:
-      enabled: true
+      enabled: false
       upload_via: "business.facebook.com"
       max_daily: 4
       hashtags: ["#HistoryFacts", "#Animation", "#Shorts"]
     instagram:
-      enabled: true
+      enabled: false
       upload_via: "instagram.com/reels/upload"
       max_daily: 4
       hashtags: ["#history", "#facts", "#animation", "#reels"]
