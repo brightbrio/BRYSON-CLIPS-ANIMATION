@@ -137,7 +137,8 @@ class DistributionAgent:
                              f"Is start_hasahya_chrome.bat running Chrome with --remote-debugging-port=9222? "
                              f"Falling back.")
         
-        # --- Mode A: reuse the user's real Chrome profile (no fresh login) ---
+        # --- Mode B: reuse the user's real Chrome profile (no fresh login) ---
+        cp = self.config.get("distribution", {}).get("chrome_profile", {})
         if cp.get("enabled"):
             user_data_dir = cp.get("user_data_dir") or os.path.join(
                 os.environ.get("LOCALAPPDATA", ""), "Google", "Chrome", "User Data")
@@ -233,29 +234,45 @@ class DistributionAgent:
         
         targets = [p for p in self.enabled_platforms if p in self.pages]
         logger.info(f"Posting video {self.current_video_id} to {len(targets)} platforms: {targets}")
-        
-        tasks = []
+
+        # Post SERIALLY — running 4 upload flows at once on a shared/live browser
+        # makes the pages close ("Target page, context or browser has been closed").
         for platform in targets:
-            task = self._post_single(platform, video_path, metadata, thumbnail_path)
-            tasks.append(task)
-        
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        
-        for platform, result in zip(targets, results):
-            if isinstance(result, Exception):
-                logger.error(f"Failed to post to {platform}: {result}")
-            else:
+            try:
+                result = await self._post_single(platform, video_path, metadata, thumbnail_path)
                 logger.info(f"Posted to {platform}: {result}")
-        
+            except Exception as exc:
+                logger.error(f"Failed to post to {platform}: {exc}")
+
         # Schedule engagement
         await self._schedule_engagement()
     
+    async def _live_page(self, platform: str):
+        """Return a usable page for `platform`. If the live/CDP page was closed,
+        recreate it in the shared context so the flow can continue."""
+        page = self.pages.get(platform)
+        if page is not None and not page.is_closed():
+            return page
+        # Recreate in the shared/first context (async Playwright context).
+        ctx = self.contexts.get(platform)
+        if ctx is not None and not ctx.is_closed():
+            try:
+                page = await ctx.new_page()
+                self.pages[platform] = page
+                page.set_default_timeout(120000)
+                logger.info(f"[{platform}] page was closed — recreated for retry")
+                return page
+            except Exception:
+                pass
+        raise RuntimeError(f"No live page for {platform} (browser context closed)")
+
     async def _post_single(self, platform: str, video_path: str, metadata: Dict, thumbnail_path: str) -> str:
         """Post to a single platform."""
-        page = self.pages[platform]
+        # Grab a LIVE page — if the CDP/live-browser page closed, recreate it.
+        page = await self._live_page(platform)
         config = self.PLATFORMS[platform]
         selectors = config["selectors"]
-        
+
         # Navigate to upload page
         await page.goto(config.get("upload_url", config["url"]))
         await page.wait_for_load_state("networkidle")
