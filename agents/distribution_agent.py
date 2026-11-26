@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import json
+import os
 import sqlite3
 import random
 from pathlib import Path
@@ -102,36 +103,75 @@ class DistributionAgent:
         self.current_video_id = 0
     
     async def start(self):
-        """Launch browser with per-platform auth states."""
+        """Launch browser. Prefers the user's real Chrome profile ('Hasahya Brian')
+        so it reuses already-logged-in YouTube/TikTok sessions. Falls back to
+        per-platform storage_state auth files otherwise."""
         if not HAS_PLAYWRIGHT:
             logger.info("Distribution agent started (no playwright available)")
             return
-        self.playwright = await async_playwright().start()
-        self.browser = await self.playwright.chromium.launch(headless=False)
         
-        # Only open platforms that have a saved auth session (real login done)
+        self.playwright = await async_playwright().start()
+        cp = self.config.get("distribution", {}).get("chrome_profile", {})
+        
+        # --- Mode A: reuse the user's real Chrome profile (no fresh login) ---
+        if cp.get("enabled"):
+            user_data_dir = cp.get("user_data_dir") or os.path.join(
+                os.environ.get("LOCALAPPDATA", ""), "Google", "Chrome", "User Data")
+            profile_dir = cp.get("profile_directory", "Profile 1")
+            channel = cp.get("channel", "chrome")
+            args = [f"--profile-directory={profile_dir}", "--no-first-run"]
+            if not cp.get("headless", False):
+                args.append("--start-maximized")
+            try:
+                logger.info(f"[chrome_profile] Reusing Chrome profile '{profile_dir}' "
+                            f"(Hasahya Brian sessions) — Chrome must be CLOSED for this to work.")
+                ctx = await self.playwright.chromium.launch_persistent_context(
+                    user_data_dir, channel=channel, headless=False,
+                    args=args, viewport=None,
+                )
+                # One shared context (the same logged-in user) backs every platform.
+                for platform in self.enabled_platforms:
+                    page = await ctx.new_page()
+                    page.set_default_timeout(120000)
+                    self.contexts[platform] = ctx
+                    self.pages[platform] = page
+                # Track the shared context so close() doesn't double-close it.
+                self._shared_ctx = ctx
+                logger.info(f"[chrome_profile] Ready for: {', '.join(self.pages.keys())}")
+                return
+            except Exception as e:
+                logger.error(f"[chrome_profile] Failed to launch Chrome profile: {e}. "
+                             f"Is Chrome closed? Falling back to auth-file mode.")
+        
+        # --- Mode B: fresh browser + per-platform storage_state auth files ---
+        self.browser = await self.playwright.chromium.launch(headless=False)
         for platform in self.enabled_platforms:
             auth_file = self.auth_dir / f"{platform}_auth.json"
             if not auth_file.exists():
-                logger.info(f"Skipping {platform} (no {auth_file.name} — run one_time_auth.py first)")
+                logger.info(f"Skipping {platform} (no {auth_file.name} — run one_time_auth.py or enable chrome_profile)")
                 continue
             self.contexts[platform] = await self.browser.new_context(storage_state=str(auth_file))
             self.pages[platform] = await self.contexts[platform].new_page()
             self.pages[platform].set_default_timeout(120000)
         
         if not self.pages:
-            logger.warning("No platforms have auth files; distribution will be a no-op. "
-                          "Run python one_time_auth.py first.")
+            logger.warning("No platforms available (no auth files, chrome_profile not enabled). "
+                           "Enable distribution.chrome_profile in config.yaml OR run one_time_auth.py.")
         
         logger.info(f"Distribution agent started for: {', '.join(self.pages.keys()) or '(none)'}")
     
     async def close(self):
         """Clean shutdown."""
-        for ctx in self.contexts.values():
-            await ctx.close()
-        if self.browser:
-            await self.browser.close()
-        if hasattr(self, 'playwright'):
+        shared = getattr(self, "_shared_ctx", None)
+        if shared is not None:
+            # chrome_profile mode: one persistent context backs all platforms
+            await shared.close()
+        else:
+            for ctx in self.contexts.values():
+                await ctx.close()
+            if self.browser:
+                await self.browser.close()
+        if hasattr(self, "playwright"):
             await self.playwright.stop()
         logger.info("Distribution agent closed")
     

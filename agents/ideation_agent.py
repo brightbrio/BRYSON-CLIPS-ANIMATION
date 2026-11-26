@@ -214,7 +214,11 @@ Output ONLY numbered list 1-10.
             prompt = self._build_phase1_prompt()
             response = self._call_llm(prompt)
         
-        return self._parse_ideas(response)[:count]
+        ideas = self._parse_ideas(response)
+        if not ideas:
+            logger.warning("LLM ideation returned 0 parseable ideas — using template fallback so the cycle never stalls")
+            ideas = self._parse_ideas(self._fallback_ideas())
+        return ideas[:count]
     
     def generate_ideas_batch(self) -> List[Dict]:
         """Generate 10 new ideas, fact-check, store in DB."""

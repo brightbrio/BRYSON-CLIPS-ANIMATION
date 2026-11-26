@@ -196,12 +196,9 @@ class Orchestrator:
         """Stop all agents."""
         logger.info("Stopping agents...")
         
-        if self.distribution_agent:
-            await self.distribution_agent.close()
-        if self.production_agent:
-            await self.production_agent.close()
-        if self.ideation_agent:
-            await self.ideation_agent.close()
+        for agent in (self.distribution_agent, self.production_agent, self.ideation_agent):
+            if agent and hasattr(agent, "close"):
+                await agent.close()
         
         logger.info("All agents stopped")
     
