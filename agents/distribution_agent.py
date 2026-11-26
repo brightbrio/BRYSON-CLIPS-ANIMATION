@@ -107,19 +107,23 @@ class DistributionAgent:
             logger.info("Distribution agent started (no playwright available)")
             return
         self.playwright = await async_playwright().start()
-        self.browser = await self.playwright.chromium.launch(headless=True)
+        self.browser = await self.playwright.chromium.launch(headless=False)
         
+        # Only open platforms that have a saved auth session (real login done)
         for platform in self.enabled_platforms:
             auth_file = self.auth_dir / f"{platform}_auth.json"
-            if auth_file.exists():
-                self.contexts[platform] = await self.browser.new_context(storage_state=str(auth_file))
-            else:
-                self.contexts[platform] = await self.browser.new_context()
-            
+            if not auth_file.exists():
+                logger.info(f"Skipping {platform} (no {auth_file.name} — run one_time_auth.py first)")
+                continue
+            self.contexts[platform] = await self.browser.new_context(storage_state=str(auth_file))
             self.pages[platform] = await self.contexts[platform].new_page()
             self.pages[platform].set_default_timeout(120000)
         
-        logger.info(f"Distribution agent started for: {', '.join(self.enabled_platforms)}")
+        if not self.pages:
+            logger.warning("No platforms have auth files; distribution will be a no-op. "
+                          "Run python one_time_auth.py first.")
+        
+        logger.info(f"Distribution agent started for: {', '.join(self.pages.keys()) or '(none)'}")
     
     async def close(self):
         """Clean shutdown."""
@@ -135,6 +139,10 @@ class DistributionAgent:
     
     async def post_to_all(self, video_path: str, metadata: Dict, thumbnail_path: str):
         """Post video to all enabled platforms with platform-specific metadata."""
+        if not video_path or not Path(video_path).exists():
+            logger.warning(f"No real video at '{video_path}'; nothing to post. "
+                          f"Make sure local video render succeeded.")
+            return
         self.current_video_id = metadata["video_id"]
         self.current_prop = metadata["prop"]
         
@@ -143,22 +151,21 @@ class DistributionAgent:
         if not self.pages:
             logger.warning(
                 "No browser pages available (Playwright not installed or no auth "
-                "state). Skipping distribution to %s. Run locally with real auth "
-                "to post to HM Recaps / Hasahya Motivated.",
-                ", ".join(self.enabled_platforms),
+                "state). Run 'python one_time_auth.py' locally, then 'python run_local.py'.",
             )
             return
         
-        logger.info(f"Posting video {self.current_video_id} to {len(self.enabled_platforms)} platforms...")
+        targets = [p for p in self.enabled_platforms if p in self.pages]
+        logger.info(f"Posting video {self.current_video_id} to {len(targets)} platforms: {targets}")
         
         tasks = []
-        for platform in self.enabled_platforms:
+        for platform in targets:
             task = self._post_single(platform, video_path, metadata, thumbnail_path)
             tasks.append(task)
         
         results = await asyncio.gather(*tasks, return_exceptions=True)
         
-        for platform, result in zip(self.enabled_platforms, results):
+        for platform, result in zip(targets, results):
             if isinstance(result, Exception):
                 logger.error(f"Failed to post to {platform}: {result}")
             else:

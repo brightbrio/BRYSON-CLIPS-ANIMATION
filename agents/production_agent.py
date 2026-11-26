@@ -191,12 +191,28 @@ class ProductionAgent:
         return shots
     
     async def produce_video(self, video_prompts: List[Dict], story: Dict, character_sheet: str) -> Dict:
-        """Produce final video from clips."""
-        # Fallback: return metadata only
+        """Produce final video from clips. Locally, renders a REAL 9:16 MP4
+        with free tools (moviepy+PIL+ffmpeg) via video_gen so it can be posted
+        to HM Recaps / Hasahya Motivated without Google Flow sign-in."""
         prop = story.get("prop", "Unknown")
+        video_path = ""
+        thumb_path = ""
+        # Try local real render (only when moviepy is available = local machine)
+        try:
+            import video_gen
+            out_dir = self.config["paths"].get("output_dir", "output")
+            safe = "".join(c for c in prop if c.isalnum() or c == "_")[:30] or "story"
+            video_path = Path(out_dir) / f"bryson_{safe}_{int(__import__('time').time())}.mp4"
+            video_path = video_gen.render_story_video(story, video_path)
+            thumb_path = Path(video_path).with_suffix(".jpg")
+            thumb_path = video_gen.make_thumbnail(thumb_path)
+            logger.info(f"Rendered real video: {video_path}")
+        except Exception as e:
+            logger.warning(f"Local video render failed ({e}); using metadata-only")
+            video_path, thumb_path = "", ""
         return {
-            "final_video_path": "",
-            "thumbnail_path": "",
+            "final_video_path": video_path,
+            "thumbnail_path": thumb_path,
             "title_main": f"How a {prop} Changed History",
             "title_youtube": f"How a {prop} Changed History #Shorts",
             "title_tiktok": f"The {prop} story you didn't know #history",
