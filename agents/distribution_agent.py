@@ -92,6 +92,8 @@ class DistributionAgent:
         self.assets_dir = Path(config["paths"]["assets_dir"])
         
         self.browser: Optional[Browser] = None
+        self.cdp_browser: Optional[Browser] = None
+        self._cdp: bool = False
         self.contexts: Dict[str, BrowserContext] = {}
         self.pages: Dict[str, Page] = {}
         
@@ -103,15 +105,37 @@ class DistributionAgent:
         self.current_video_id = 0
     
     async def start(self):
-        """Launch browser. Prefers the user's real Chrome profile ('Hasahya Brian')
-        so it reuses already-logged-in YouTube/TikTok sessions. Falls back to
-        per-platform storage_state auth files otherwise."""
+        """Drive the user's LIVE Chrome ('Hasahya' profile) via CDP attach so we reuse
+        already-logged-in YouTube/TikTok sessions without closing their browser.
+        Falls back to launching the Chrome profile, then to auth-file contexts."""
         if not HAS_PLAYWRIGHT:
             logger.info("Distribution agent started (no playwright available)")
             return
-        
+
         self.playwright = await async_playwright().start()
-        cp = self.config.get("distribution", {}).get("chrome_profile", {})
+        cdp = self.config.get("distribution", {}).get("cdp", {})
+
+        # --- Mode A: CDP attach to a RUNNING Chrome (best — no close, live sessions) ---
+        if cdp.get("enabled"):
+            endpoint = cdp.get("endpoint", "http://127.0.0.1:9222")
+            try:
+                logger.info(f"[cdp] Attaching to running Chrome at {endpoint} "
+                            f"(run start_hasahya_chrome.bat first).")
+                browser = await self.playwright.chromium.connect_over_cdp(endpoint)
+                self._cdp = True
+                self.cdp_browser = browser
+                ctx = browser.contexts[0] if browser.contexts else await browser.new_context()
+                for platform in self.enabled_platforms:
+                    page = await ctx.new_page()
+                    page.set_default_timeout(120000)
+                    self.contexts[platform] = ctx
+                    self.pages[platform] = page
+                logger.info(f"[cdp] Ready for: {', '.join(self.pages.keys())}")
+                return
+            except Exception as e:
+                logger.error(f"[cdp] Attach failed: {e}. "
+                             f"Is start_hasahya_chrome.bat running Chrome with --remote-debugging-port=9222? "
+                             f"Falling back.")
         
         # --- Mode A: reuse the user's real Chrome profile (no fresh login) ---
         if cp.get("enabled"):
@@ -161,16 +185,28 @@ class DistributionAgent:
         logger.info(f"Distribution agent started for: {', '.join(self.pages.keys()) or '(none)'}")
     
     async def close(self):
-        """Clean shutdown."""
-        shared = getattr(self, "_shared_ctx", None)
-        if shared is not None:
-            # chrome_profile mode: one persistent context backs all platforms
-            await shared.close()
+        """Clean shutdown. CDP mode: only close the pages we created, keep the
+        user's Chrome running. Other modes: close contexts/browser normally."""
+        if getattr(self, "_cdp", False):
+            for page in list(self.pages.values()):
+                try:
+                    await page.close()
+                except Exception:
+                    pass
+            try:
+                if getattr(self, "cdp_browser", None):
+                    await self.cdp_browser.close()  # disconnects only; Chrome stays open
+            except Exception:
+                pass
         else:
-            for ctx in self.contexts.values():
-                await ctx.close()
-            if self.browser:
-                await self.browser.close()
+            shared = getattr(self, "_shared_ctx", None)
+            if shared is not None:
+                await shared.close()
+            else:
+                for ctx in self.contexts.values():
+                    await ctx.close()
+                if self.browser:
+                    await self.browser.close()
         if hasattr(self, "playwright"):
             await self.playwright.stop()
         logger.info("Distribution agent closed")

@@ -129,6 +129,14 @@ production:
     twist_frame: 1740  # 58s twist question
 
 distribution:
+  # Reuse the user's live Chrome profile ('Hasahya') WITHOUT closing it, by
+  # attaching to Chrome's remote-debugging port. This uses the real logged-in
+  # YouTube/TikTok sessions directly. You must first run:
+  #     .\start_hasahya_chrome.bat      (launches Hasahya Chrome with --remote-debugging-port=9222)
+  # Then run:  python run_local.py
+  cdp:
+    enabled: true
+    endpoint: "http://127.0.0.1:9222"
   # Reuse the user's real Chrome profile ('Hasahya Brian') so posting uses
   # already-logged-in YouTube/TikTok sessions. Chrome MUST be closed while this
   # runs (Playwright takes the profile lock). If it can't attach, it falls back
